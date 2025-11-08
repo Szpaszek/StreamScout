@@ -28,7 +28,7 @@ class Moviecard extends StatelessWidget{
           
           // Expanded widget to make the image take up available space
           Expanded(
-            flex: 4,
+            flex: 5, // Ratio of size, for example 5:2
             child: ClipRRect( // ClipRRect is a widget that clips its child using a rounded rectangle
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
 
@@ -61,7 +61,7 @@ class Moviecard extends StatelessWidget{
           ),
 
           Expanded(
-            flex: 1,
+            flex: 2,
             child: Padding(
               // padding just like in CSS
               padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 8.0),

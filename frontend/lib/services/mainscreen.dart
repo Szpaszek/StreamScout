@@ -34,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
+      
       title: const Text('Stream Scout'),
     ),
 
@@ -58,7 +59,7 @@ Widget build(BuildContext context) {
         ),
       ],
       currentIndex: _selectedIndex,
-      selectedItemColor: Colors.amber[800],
+      selectedItemColor: Colors.tealAccent,
       onTap: _onItemTapped,
     ),
   );

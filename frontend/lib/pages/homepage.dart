@@ -1,8 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/appconfig.dart';
 import 'package:frontend/models/movie.dart';
+import 'package:frontend/widgets/moviecard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -16,14 +15,14 @@ class HomePage extends StatefulWidget {
 // State class for HomePage
 class _HomePageState extends State<HomePage> {
   List<Movie> _movies = [];
-  String _jsonResponse = 'Awaiting response...'; // test only
+  // String _jsonResponse = 'Awaiting response...'; // test only
   bool _isLoading = true;
   String? _errorMessage;
 
   // Use a Json encoder to format the JSON response for better readability
-  static const JsonEncoder _jsonEncoder = JsonEncoder.withIndent('  '); // test only
+  // static const JsonEncoder _jsonEncoder = JsonEncoder.withIndent('  '); // test only
 
- // Initial state setup which fetches movies only once when the widget is created
+  // Initial state setup which fetches movies only once when the widget is created
   @override
   void initState() {
     super.initState();
@@ -35,47 +34,50 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _jsonResponse = 'Awaiting response...'; // test only
+      // _jsonResponse = 'Awaiting response...'; // test only
     });
 
-    final uri = Uri.parse('${AppConfig.apiBaseUrl}${AppConfig.popularMoviesEndpoint}');
+    final uri = Uri.parse(
+      '${AppConfig.apiBaseUrl}${AppConfig.popularMoviesEndpoint}',
+    );
 
     try {
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-
         // Decode the JSON response to a Dart object
         final data = jsonDecode(response.body);
 
-        final formattedJson = _jsonEncoder.convert(data); // test only
+        // final formattedJson = _jsonEncoder.convert(data); // test only
 
         // Ensure data is a dictionary and has the 'movies' key
         if (data is Map<String, dynamic> && data.containsKey('movies')) {
           final List<dynamic> results = data['movies'];
 
           setState(() {
-            _movies = results.map((movieJson) => Movie.fromJson(movieJson)).toList();
+            _movies = results
+                .map((movieJson) => Movie.fromJson(movieJson))
+                .toList();
             _isLoading = false;
-            _jsonResponse = formattedJson; // test only
+            // _jsonResponse = formattedJson; // test only
           });
-        }
-        else {
+        } else {
           throw const FormatException("Invalid JSON format from server.");
         }
       } else {
         // Handle non-200 responses
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to load movies: ${response.statusCode}: ${response.body}';
+          _errorMessage =
+              'Failed to load movies: ${response.statusCode}: ${response.body}';
         });
       }
-    } 
-    on FormatException  {
+    } on FormatException {
       // Handle JSON format exceptions
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Invalid data received from server. Expected JSON format.';
+        _errorMessage =
+            'Invalid data received from server. Expected JSON format.';
       });
     } catch (e) {
       // Handle exceptions during the HTTP request
@@ -86,37 +88,74 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  @override 
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchPopularMovies,
-          )
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 8.0,
+              top: 8.0,
+              bottom: 8.0,
+            ),
+            child: Text(
+              'Popular Movies',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(child: _buildBody()),
         ],
       ),
-        body: _buildBody(),
     );
   }
+
+  // body of the screen
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.amber,));
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.tealAccent),
+      );
     }
 
     if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
+      return Center(
+        child: Text(_errorMessage!, style: TextStyle(fontSize: 18)),
+      );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Text(
-        _jsonResponse,
-        style: const TextStyle(fontFamily: 'Courier', fontSize: 14),
-      ),
+    if (_movies.isEmpty) {
+      return Center(
+        child: Text('No popular movies found', style: TextStyle(fontSize: 18)),
+      );
+    }
+
+    return ListView(
+      children: [
+        // horizontal list of cards
+        SizedBox(
+          height: 300, // fixed height for the horizontal scrolling row
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _movies.length,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+            ), // padding for the list
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(
+                  right: 12.0,
+                ), // padding for each movie
+                child: SizedBox(
+                  width: 130, // fixed width for each card
+                  child: Moviecard(movie: _movies[index]),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
