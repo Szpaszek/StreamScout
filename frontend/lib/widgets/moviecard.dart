@@ -88,7 +88,7 @@ class Moviecard extends StatelessWidget{
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4), // Space between star and rating
                       Text(
-                        '${movie.rating.toStringAsFixed(1)}',
+                        movie.rating.toStringAsFixed(1),
                         style: const TextStyle(fontSize: 14, color: Colors.white70),
                       ),
                     ],
@@ -108,7 +108,11 @@ class Moviecard extends StatelessWidget{
       color: Colors.black,
       child: Center(
         child: Column(
-          // TODO: Center the icon and message vertically
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.grey, size: 40),
+            Text(message, style: const TextStyle(color: Colors.grey))
+          ]
         ),
       ),
     );
