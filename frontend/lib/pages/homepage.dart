@@ -15,12 +15,8 @@ class HomePage extends StatefulWidget {
 // State class for HomePage
 class _HomePageState extends State<HomePage> {
   List<Movie> _movies = [];
-  // String _jsonResponse = 'Awaiting response...'; // test only
   bool _isLoading = true;
   String? _errorMessage;
-
-  // Use a Json encoder to format the JSON response for better readability
-  // static const JsonEncoder _jsonEncoder = JsonEncoder.withIndent('  '); // test only
 
   // Initial state setup which fetches movies only once when the widget is created
   @override
@@ -34,7 +30,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      // _jsonResponse = 'Awaiting response...'; // test only
     });
 
     final uri = Uri.parse(
@@ -48,20 +43,23 @@ class _HomePageState extends State<HomePage> {
         // Decode the JSON response to a Dart object
         final data = jsonDecode(response.body);
 
-        // final formattedJson = _jsonEncoder.convert(data); // test only
-
         // Ensure data is a dictionary and has the 'movies' key
         if (data is Map<String, dynamic> && data.containsKey('movies')) {
           final List<dynamic> results = data['movies'];
 
-          setState(() {
+          // if homepage is displayed
+          if (mounted) {
+            setState(() {
             _movies = results
                 .map((movieJson) => Movie.fromJson(movieJson))
                 .toList();
             _isLoading = false;
-            // _jsonResponse = formattedJson; // test only
           });
-        } else {
+          }
+        } 
+
+        else 
+        {
           throw const FormatException("Invalid JSON format from server.");
         }
       } else {
