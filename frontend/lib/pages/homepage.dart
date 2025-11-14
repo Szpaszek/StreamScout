@@ -50,39 +50,42 @@ class _HomePageState extends State<HomePage> {
           // if homepage is displayed
           if (mounted) {
             setState(() {
-            _movies = results
-                .map((movieJson) => Movie.fromJson(movieJson))
-                .toList();
-            _isLoading = false;
-          });
+              _movies = results
+                  .map((movieJson) => Movie.fromJson(movieJson))
+                  .toList();
+              _isLoading = false;
+            });
           }
-        } 
-
-        else 
-        {
+        } else {
           throw const FormatException("Invalid JSON format from server.");
         }
       } else {
-        // Handle non-200 responses
+        if (mounted) {
+          // Handle non-200 responses
+          setState(() {
+            _isLoading = false;
+            _errorMessage =
+                'Failed to load movies: ${response.statusCode}: ${response.body}';
+          });
+        }
+      }
+    } on FormatException {
+      if (mounted) {
+        // Handle JSON format exceptions
         setState(() {
           _isLoading = false;
           _errorMessage =
-              'Failed to load movies: ${response.statusCode}: ${response.body}';
+              'Invalid data received from server. Expected JSON format.';
         });
       }
-    } on FormatException {
-      // Handle JSON format exceptions
-      setState(() {
-        _isLoading = false;
-        _errorMessage =
-            'Invalid data received from server. Expected JSON format.';
-      });
     } catch (e) {
-      // Handle exceptions during the HTTP request
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Failed to connect to the server';
-      });
+      if (mounted) {
+        // Handle exceptions during the HTTP request
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to connect to the server';
+        });
+      }
     }
   }
 
