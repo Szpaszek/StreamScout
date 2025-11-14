@@ -45,9 +45,9 @@ app.*.map.json
 /android/app/release
 
 # ignore auto generated files
-.ios/
-.android/
-.linux/
-.macos/
-.web/
-.windows/
+/ios/
+/android/
+/linux/
+/macos/
+/web/
+/windows/
