@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ignore auto generated files
+.ios/
+.android/
+.linux/
+.macos/
+.web/
+.windows/
