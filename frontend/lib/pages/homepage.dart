@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/appconfig.dart';
-import 'package:frontend/models/movie.dart';
-import 'package:frontend/widgets/moviecard.dart';
+import 'package:frontend/models/media.dart';
+import 'package:frontend/widgets/mediacard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -14,7 +14,7 @@ class HomePage extends StatefulWidget {
 
 // State class for HomePage
 class _HomePageState extends State<HomePage> {
-  List<Movie> _movies = [];
+  List<Media> _movies = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> {
           if (mounted) {
             setState(() {
               _movies = results
-                  .map((movieJson) => Movie.fromJson(movieJson))
+                  .map((movieJson) => Media.fromJson(movieJson))
                   .toList();
               _isLoading = false;
             });
@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
                 ), // padding for each movie
                 child: SizedBox(
                   width: 130, // fixed width for each card
-                  child: Moviecard(movie: _movies[index]),
+                  child: Mediacard(media: _movies[index]),
                 ),
               );
             },

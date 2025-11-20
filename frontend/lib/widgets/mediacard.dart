@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/movie.dart';
+import 'package:frontend/models/media.dart';
 
-class Moviecard extends StatelessWidget{
-   final Movie movie;
-  const Moviecard({super.key, required this.movie});
+class Mediacard extends StatelessWidget{
+   final Media media;
+  const Mediacard({super.key, required this.media});
 
   @override
   Widget build(BuildContext context) // Buildcontext is a reference to the location of a widget in the widget tree
@@ -33,11 +33,11 @@ class Moviecard extends StatelessWidget{
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
 
               // The posterPath is provided by the Flask backend
-              child: movie.posterPath != null ? 
+              child: media.posterPath != null ? 
 
               // if the posterPath exists, download and display the image from the URL
               Image.network(
-                movie.posterPath!,
+                media.posterPath!,
                 fit: BoxFit.cover, // BoxFit.cover scales the image to cover the entire widget area
 
                 // if the image fails to load, display a placeholder icon
@@ -70,9 +70,9 @@ class Moviecard extends StatelessWidget{
                 children: [
                   // Tooltip widget to show full title on hover
                   Tooltip(
-                    message: movie.title,
+                    message: media.title,
                     child: Text(
-                      movie.title,
+                      media.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class Moviecard extends StatelessWidget{
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4), // Space between star and rating
                       Text(
-                        movie.rating.toStringAsFixed(1),
+                        media.rating.toStringAsFixed(1),
                         style: const TextStyle(fontSize: 14, color: Colors.white70),
                       ),
                     ],

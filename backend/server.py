@@ -31,7 +31,7 @@ def _process_tmdb_result(result):
         "media_type": media_type,
     }
 
-    if media_type == 'movie' or media_type == 'tv' or media_type == None:
+    if media_type == 'movie' or media_type == 'tv':
         # movie/TV fields
         optimized_data["title"] = result.get('title') or result.get('name', 'No Title') # movies use title and shows use name
         optimized_data["overview"] = result.get('overview', 'No overview available.') 
@@ -47,15 +47,15 @@ def _process_tmdb_result(result):
         optimized_data["name"] = result.get('name', 'No Name')
         optimized_data["profile_path"] = f"{IMAGE_BASE_URL}{result.get('profile_path')}" if result.get('profile_path') else None
 
-        # process nown_for items into a simple list of names for the actor model
+        # process known_for items into a simple list of names for the actor model
         known_for_list = []
         for item in result.get('known_for', []):
-            if item.get('media_type') in ['movie', 'tv']:
-                known_for_list.append({
-                    "id": item.get('id'),
-                    "title": item.get('title') or item.get('name', 'Unknown'),
-                    "media_type": item.get('media_type')
-                })
+            # recursively process the item to get a full Media JSON structure
+            processed_item = _process_tmdb_result(item)
+
+            # ensure it is a movie or tv show
+            if processed_item and processed_item['media_type'] in ['movie', 'tv']:
+                known_for_list.append(processed_item)
 
         optimized_data["known_for"] = known_for_list
         optimized_data["department"] = result.get('known_for_department', 'Unknown')
@@ -78,6 +78,10 @@ def get_popular_movies():
         
         optimized_results = []
         for movie in popular_movies_response.get('results', []):
+            
+            # set media_type for every movie
+            movie['media_type'] = 'movie'
+            
             processed_movie = _process_tmdb_result(movie)
             if processed_movie:
                 optimized_results.append(processed_movie)
@@ -134,7 +138,7 @@ def get_search_results():
         print(f"An unexpected error occurred: {e}")
         return jsonify({"status": "error", "message": "An unexpected error occurred"}), 500
     
-# for testing puposese
+# for testing purposes
 @app.route('/api/test', methods=['GET'])
 def test():
 
