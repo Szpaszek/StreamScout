@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Pages/homepage.dart';
 import 'package:frontend/Pages/watchlistpage.dart';
+import 'package:frontend/pages/searchpage.dart';
 import 'package:frontend/pages/settingspage.dart';
 
 class MainScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _MainScreenState extends State<MainScreen> {
   // List of pages to display
   static const List<Widget> _pages = <Widget>[
     HomePage(),
+    SearchPage(),
     WatchlistPage(),
     SettingsPage(),
   ];
@@ -41,13 +43,16 @@ Widget build(BuildContext context) {
     // Display the currently selected page
     body: Center(
       child: _pages.elementAt(_selectedIndex),
-    ),
-     
+    ),    
     bottomNavigationBar: BottomNavigationBar(
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
           label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.search),
+          label: 'Search',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.list),
