@@ -51,7 +51,7 @@ class Mediacard extends StatelessWidget{
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes!)
                           : null,
-                      color: Colors.amber,
+                      color: Colors.cyanAccent,
                     ),
                   );
                 }
