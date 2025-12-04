@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
+import 'package:intl/intl.dart';
+
 
 class Mediacard extends StatelessWidget{
    final Media media;
   const Mediacard({super.key, required this.media});
+
+  String _formatDate(String dateString) {
+    if (dateString == 'Unknown' || dateString.isEmpty) return 'Unknown';
+    try{
+      final DateTime date = DateTime.parse(dateString);
+      return DateFormat('dd. MMM yyyy').format(date);
+    } catch (e) {
+      return dateString;
+    }
+  }
 
   @override
   Widget build(BuildContext context) // Buildcontext is a reference to the location of a widget in the widget tree
   {
     return Container( // Container is a widget that allows for styling and positioning of its child widgets
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
@@ -51,7 +63,7 @@ class Mediacard extends StatelessWidget{
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes!)
                           : null,
-                      color: Colors.cyanAccent,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   );
                 }
@@ -73,10 +85,10 @@ class Mediacard extends StatelessWidget{
                     message: media.title,
                     child: Text(
                       media.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white
+                        color: Theme.of(context).colorScheme.onSurface
                       ),
                       maxLines: 2, // Limit title to one line
                       overflow: TextOverflow.ellipsis, // Show ellipsis if title is too long
@@ -85,11 +97,17 @@ class Mediacard extends StatelessWidget{
                   const Spacer(), // Spacer to add space between title and rating
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4), // Space between star and rating
+                      Text(
+                        _formatDate(media.releaseDate),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
+                      ),
+                      
+                      const SizedBox(width: 8),
+                      Icon(Icons.star, color: Theme.of(context).colorScheme.primary, size: 12),
+                      const SizedBox(width: 2), // Space between star and rating
                       Text(
                         media.rating.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 14, color: Colors.white70),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
                       ),
                     ],
                   )

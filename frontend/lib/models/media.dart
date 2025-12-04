@@ -34,7 +34,7 @@ class Media {
       posterPath: json['poster_path'] as String?,
       backdropPath: json['backdrop_Path'] as String?,
       genreIds: (json['genre_ids'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
-      rating: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

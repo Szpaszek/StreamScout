@@ -114,13 +114,10 @@ class _SearchPageState extends State<SearchPage> {
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: InputDecoration(
-                hintText: 'Search movies, shows, people...',
-                hintStyle: const TextStyle(color: Colors.white54),
-                prefixIcon: const Icon(Icons.search, color: Colors.tealAccent),
-                filled: true,
-                fillColor: const Color(0xFF1E1E1E),
+                hintText: 'Search movies, shows, actors...',
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
@@ -133,7 +130,7 @@ class _SearchPageState extends State<SearchPage> {
           // result area
           Expanded(
             child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.tealAccent))
+            ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
             : _errorMessage != null
               ? Center(child: Text(_errorMessage!))
               : _searchResults.isEmpty
