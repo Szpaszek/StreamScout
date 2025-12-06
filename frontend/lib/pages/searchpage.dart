@@ -43,7 +43,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     final uri = Uri.parse(
-      '${AppConfig.apiBaseUrl}${AppConfig.multiSearchEndpoint}?query=$query',
+      '${AppConfig.apiBaseUrl}${AppConfig.multiSearchEndpoint}/$query',
     );
 
     try {
