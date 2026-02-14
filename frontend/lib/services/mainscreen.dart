@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Pages/homepage.dart';
-import 'package:frontend/Pages/watchlistpage.dart';
+import 'package:frontend/pages/homepage.dart';
+import 'package:frontend/pages/watchlistpage.dart';
 import 'package:frontend/pages/searchpage.dart';
 import 'package:frontend/pages/settingspage.dart';
 
@@ -10,8 +10,6 @@ class MainScreen extends StatefulWidget {
     @override
   State<MainScreen> createState() => _MainScreenState();
 }
-
-
 
 class _MainScreenState extends State<MainScreen> {
   // Keep track of the currently selected page index
