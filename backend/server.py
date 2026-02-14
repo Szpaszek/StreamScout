@@ -5,6 +5,7 @@ import requests.exceptions
 from dotenv import load_dotenv # Load environment variables from .env file
 from routes.movies import movies_bp
 from routes.search import search_bp
+from routes.discover import discover_bp
 
 load_dotenv()
 
@@ -25,10 +26,13 @@ tmdb_client.REQUESTS_TIMEOUT = 5  # seconds for API requests
 # flask app initialization
 app = Flask(__name__)
 
+# tmdb_client.Discover().
+
 # separating apis into blueprints
 # register the movies blueprint with the url prefix
 app.register_blueprint(movies_bp, url_prefix='/api/movies')
 app.register_blueprint(search_bp, url_prefix='/api/search')
+app.register_blueprint(discover_bp, url_prefix='/api/discover')
 
 # application configuration, shares global objects with blueprints
 app.config['tmdb_client'] = tmdb_client

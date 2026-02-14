@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
-from utils.utils import _process_tmdb_result
+from utils.utils import process_tmdb_result
 
 # define the blueprint
 search_bp = Blueprint('search', __name__)
@@ -18,7 +18,7 @@ def get_search_results(searchQuery):
         optimized_results = []
 
         for result in response.get('results', []):
-            processed_result = _process_tmdb_result(result)
+            processed_result = process_tmdb_result(result)
             optimized_results.append(processed_result)
 
         return jsonify({

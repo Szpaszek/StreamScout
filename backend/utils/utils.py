@@ -1,6 +1,6 @@
 
 # helper function to process TMDB results into a standardized format
-def _process_tmdb_result(result):
+def process_tmdb_result(result):
 
     IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
     media_type = result.get('media_type') if result.get('media_type') else None
@@ -29,7 +29,7 @@ def _process_tmdb_result(result):
         known_for_list = []
         for item in result.get('known_for', []):
             # recursively process the item to get a full Media JSON structure
-            processed_item = _process_tmdb_result(item)
+            processed_item = process_tmdb_result(item)
 
             # ensure it is a movie or tv show
             if processed_item and processed_item['media_type'] in ['movie', 'tv']:

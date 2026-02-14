@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
-from utils.utils import _process_tmdb_result
+from utils.utils import process_tmdb_result
 
 # define the blueprint
 movies_bp = Blueprint('movies', __name__)
@@ -8,7 +8,7 @@ movies_bp = Blueprint('movies', __name__)
 @movies_bp.route('/popular', methods=['GET'])
 def get_popular_movies():
 
-    # access global variables
+    # access global variable
     tmdb_client = current_app.config['tmdb_client']
 
     try:
@@ -16,22 +16,22 @@ def get_popular_movies():
         movie = tmdb_client.Movies()
 
         # get popular movies
-        popular_movies_response = movie.popular()
+        response = movie.popular()
         
         optimized_results = []
-        for movie in popular_movies_response.get('results', []):
+        for movie in response.get('results', []):
             
             # set media_type for every movie
             movie['media_type'] = 'movie'
             
-            processed_movie = _process_tmdb_result(movie)
+            processed_movie = process_tmdb_result(movie)
             if processed_movie:
                 optimized_results.append(processed_movie)
 
         return jsonify({
             "status": "success",
             "movies": optimized_results,
-            "total_results": popular_movies_response.get('total_results') # total number of popular movies needed for pagination
+            "total_results": response.get('total_results') # total number of popular movies needed for pagination
         }), 200
 
     # cathing any request exceptions from tmdbsimple
