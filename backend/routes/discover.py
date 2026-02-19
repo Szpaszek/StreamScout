@@ -68,13 +68,13 @@ def get_latest_releases():
         discover = tmdb_client.Discover()
 
         # 1. Recently released movies
-        movie_response = discover.movies(
+        movie_response = discover.movie(
             primary_release_date_gte=thirty_days_ago,
             primary_release_date_lte=today,
             sort_by='primary_release_date.desc'
         )
         movies = movie_response.get('results', [])
-        for m in movies: m['media_type'] = 'movies'
+        for m in movies: m['media_type'] = 'movie'
 
         # 2. Recently released TV shows
         tv_response = discover.tv(
