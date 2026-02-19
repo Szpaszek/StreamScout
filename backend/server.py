@@ -57,6 +57,7 @@ app.config['tmdb_client'] = tmdb_client
 # miscellaneous
 # tmdb_client.Discover() ? 
 # tmdb_client.Genres() ?
+# tmdb_client.Trending()
 
 if tmdb_client.API_KEY is None or TMDB_READ_ACCESS_TOKEN is None:
     raise ValueError("TMDB_API_KEY and TMDB_READ_ACCESS_TOKEN must be set in environment variables.")

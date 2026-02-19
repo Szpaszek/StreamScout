@@ -43,3 +43,45 @@ def get_popular_movies():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return jsonify({"status": "error", "message": "An unexpected error occurred"}), 500
+    
+@movies_bp.route('/upcoming', methods=['GET'])
+def get_upcomming_movies():
+    """
+    Docstring for get_upcomming_movies
+    """
+
+    # access global variable
+    tmdb_client = current_app.config['tmdb_client']
+
+    try:
+        # get the movie object
+        movie = tmdb_client.Movies()
+
+        # get upcoming movies
+        response = movie.upcoming()
+
+        optimized_results = []
+        for movie in response.get('results', []):
+            
+            # set media_type for every movie
+            movie['media_type'] = 'movie'
+            
+            processed_movie = process_tmdb_result(movie)
+            if processed_movie:
+                optimized_results.append(processed_movie)
+
+        return jsonify({
+            "status": "success",
+            "movies": optimized_results,
+            "total_results": response.get('total_results') # total number of upcoming movies needed for pagination
+        }), 200
+
+    # cathing any request exceptions from tmdbsimple
+    except requests.exceptions.RequestException as e:
+        print(f"Error communicating with TMDB API: {e}")
+        return jsonify({"status": "error", "message": "Failed to fetch upcoming movies"}), 503
+
+    # cathing any other unexpected exceptions
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return jsonify({"status": "error", "message": "An unexpected error occurred"}), 500
