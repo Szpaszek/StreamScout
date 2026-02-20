@@ -14,7 +14,10 @@ class HomePage extends StatefulWidget {
 
 // State class for HomePage
 class _HomePageState extends State<HomePage> {
-  List<Media> _movies = [];
+  
+  List<Media> _popularContent = [];
+  List<Media> _latestContent = [];
+  List<Media> _upcomingMovies = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -22,53 +25,26 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _fetchPopularMovies();
+    _loadAllData();
   }
 
-  // Function to fetch movies from the backend server
-  Future<void> _fetchPopularMovies() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final uri = Uri.parse(
-      '${AppConfig.apiBaseUrl}${AppConfig.popularMoviesEndpoint}',
-    );
-
+  Future<void> _loadAllData() async {
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final results = await Future.wait([
+        _fetchContent(AppConfig.popularContentEndpoint),
+        _fetchContent(AppConfig.latestContentEndpoint),
+        _fetchContent(AppConfig.upcomingMoviesEndpoint),
+      ]);
 
-      if (response.statusCode == 200) {
-        // Decode the JSON response to a Dart object
-        final data = jsonDecode(response.body);
-
-        // Ensure data is a dictionary and has the 'movies' key
-        if (data is Map<String, dynamic> && data.containsKey('movies')) {
-          final List<dynamic> results = data['movies'];
-
-          // if homepage is displayed
-          if (mounted) {
-            setState(() {
-              _movies = results
-                  .map((movieJson) => Media.fromJson(movieJson))
-                  .toList();
-              _isLoading = false;
-            });
-          }
-        } else {
-          throw const FormatException("Invalid JSON format from server.");
-        }
-      } else {
-        if (mounted) {
-          // Handle non-200 responses
-          setState(() {
-            _isLoading = false;
-            _errorMessage =
-                'Failed to load movies: ${response.statusCode}: ${response.body}';
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _popularContent = results[0];
+          _latestContent = results[1];
+          _upcomingMovies = results[2];
+          _isLoading = false;
+        });
       }
+
     } on FormatException {
       if (mounted) {
         // Handle JSON format exceptions
@@ -78,17 +54,63 @@ class _HomePageState extends State<HomePage> {
               'Invalid data received from server. Expected JSON format.';
         });
       }
-    } catch (e) {
+    } catch (e){
       if (mounted) {
-        // Handle exceptions during the HTTP request
+      // Handle non-200 responses
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to connect to the server';
+          _errorMessage =
+              'Failed to load movies: $e';
         });
       }
     }
   }
 
+  // TODO: save the state of the page, so the app does not need to fetch every time 
+  // Function to fetch popular content from the backend server
+  Future<List<Media>> _fetchContent(String apiEndpoint) async {
+
+    List<Media> content = [];
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final uri = Uri.parse(
+      '${AppConfig.apiBaseUrl}$apiEndpoint',
+    );
+
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        // Decode the JSON response to a Dart object
+        final data = jsonDecode(response.body);
+
+        // Ensure data is a dictionary 
+        if (data is Map<String, dynamic> && data.containsKey('movies') 
+        || data is Map<String, dynamic> && data.containsKey('media') 
+        || data is Map<String, dynamic> && data.containsKey('tvs')) {
+
+          final List<dynamic> results = data['media'] ?? data['movies'] ?? data['tvs'];
+
+          content = results
+              .map((movieJson) => Media.fromJson(movieJson)).toList();
+          return content;
+          
+        } else {
+          throw const FormatException("Invalid JSON format from server.");
+        }
+      } else {
+          throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+// TODO: Create large Banner for a popular movie
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -102,7 +124,7 @@ class _HomePageState extends State<HomePage> {
               bottom: 8.0,
             ),
             child: Text(
-              'Popular Movies',
+              'Home Page',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
@@ -126,37 +148,80 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    if (_movies.isEmpty) {
+    if (_popularContent.isEmpty) {
       return Center(
-        child: Text('No popular movies found', style: TextStyle(fontSize: 18)),
+        child: Text('No popular content found', style: TextStyle(fontSize: 18)),
       );
     }
 
-    return ListView(
-      children: [
-        // horizontal list of cards
-        SizedBox(
-          height: 300, // fixed height for the horizontal scrolling row
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _movies.length,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-            ), // padding for the list
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(
-                  right: 12.0,
-                ), // padding for each movie
-                child: SizedBox(
-                  width: 130, // fixed width for each card
-                  child: Mediacard(media: _movies[index]),
-                ),
-              );
-            },
+      return CustomScrollView(
+        // physics ensures smooth scrolling on both iOS an Android 
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // Title
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text("Popular", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+            ),
           ),
-        ),
-      ],
-    );
+
+          // 2. Horizontal Row 
+          SliverToBoxAdapter(
+            child: _buildHorizontalMediaCardRow(_popularContent),
+          ),
+
+          // Title
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text("Recent Releases", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+            ),
+          ),
+
+          // 2. Horizontal Row 
+          SliverToBoxAdapter(
+            child: _buildHorizontalMediaCardRow(_latestContent),
+          ),
+
+          // Title
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text("Upcoming Movies", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+            ),
+          ),
+
+          // 2. Horizontal Row 
+          SliverToBoxAdapter(
+            child: _buildHorizontalMediaCardRow(_upcomingMovies),
+          )
+        ]
+      );
   }
+
+  // horizontal list of cards
+  Widget _buildHorizontalMediaCardRow(List<Media> data) {
+    return SizedBox(
+      height: 300, // fixed height for the horizontal scrolling row
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: data.length,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+        ),
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(
+              right: 12.0, // Padding for each media element
+            ),
+            child: SizedBox(
+              width: 130, //fixed width for each card
+              child: Mediacard(media: data[index]),
+            ),
+          );
+        },
+      ),
+    );
+  } 
 }

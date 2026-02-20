@@ -25,7 +25,7 @@ tmdb_client.Genres() ?
 
 - create all API endpoints
 - finsh homescreen with showcases of upcoming movies, popular content
-- create a page for tv shows/movies
+- create a page for tv shows/movies, used when searching or clicking on the banner
 - create a page for actors
 - create a settings page
 - create a watchlist
