@@ -32,7 +32,7 @@ class Media {
       overview: json['overview'] as String? ?? 'No Overview',
       releaseDate: json['release_date'] as String? ?? 'Unknown',
       posterPath: json['poster_path'] as String?,
-      backdropPath: json['backdrop_Path'] as String?,
+      backdropPath: json['backdrop_path'] as String?,
       genreIds: (json['genre_ids'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
     );

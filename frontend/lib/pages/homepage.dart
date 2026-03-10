@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   List<Media> _popularContent = [];
   List<Media> _latestContent = [];
   List<Media> _upcomingMovies = [];
+  // TODO: make loading for each list
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -155,8 +156,6 @@ class _HomePageState extends State<HomePage> {
     }
 
       return CustomScrollView(
-        // physics ensures smooth scrolling on both iOS an Android 
-        physics: const BouncingScrollPhysics(),
         slivers: [
           // Title
           const SliverToBoxAdapter(

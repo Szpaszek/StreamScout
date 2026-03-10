@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/media.dart';
+import 'package:frontend/pages/MediaDetailsPage.dart';
 import 'package:frontend/pages/homepage.dart';
 import 'package:frontend/pages/watchlistpage.dart';
 import 'package:frontend/pages/searchpage.dart';
 import 'package:frontend/pages/settingspage.dart';
+import 'package:frontend/services/NavController.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   // List of pages to display
-  static const List<Widget> _pages = <Widget>[
+  final List<Widget> _pages = <Widget>[
     HomePage(),
     SearchPage(),
     WatchlistPage(),
@@ -25,6 +28,7 @@ class _MainScreenState extends State<MainScreen> {
 
  // Function to update the index when a new item is tapped
   void _onItemTapped(int index) {
+    NavController.closeDetails();
     setState(() {
       _selectedIndex = index;
     });
@@ -39,9 +43,18 @@ Widget build(BuildContext context) {
     ),
 
     // Display the currently selected page
-    body: Center(
-      child: _pages.elementAt(_selectedIndex),
-    ),    
+    body: ValueListenableBuilder<Media?>(valueListenable: NavController.selectedMedia,
+     builder: (context, selectedMedia, child) {
+      if (selectedMedia != null) {
+        return MediaDetailsPage(media: selectedMedia,
+        onBack: () => NavController.closeDetails(),
+        );
+      }
+      return _pages.elementAt(_selectedIndex);
+     }
+     ),
+
+
     bottomNavigationBar: BottomNavigationBar(
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/services/NavController.dart';
 import 'package:intl/intl.dart';
 
 
@@ -33,89 +34,99 @@ class Mediacard extends StatelessWidget{
         ]
       ),
 
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: ()
+          {
+            // Navigate to the details page
+            NavController.showDetails(media);
+            },
       //  Column widget to arrange child widgets vertically
-      child: Column( // a child is a widget that is contained within another widget
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          
-          // Expanded widget to make the image take up available space
-          Expanded(
-            flex: 5, // Ratio of size, for example 5:2
-            child: ClipRRect( // ClipRRect is a widget that clips its child using a rounded rectangle
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          child: Column( // a child is a widget that is contained within another widget
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              
+              // Expanded widget to make the image take up available space
+              Expanded(
+                flex: 5, // Ratio of size, for example 5:2
+                child: ClipRRect( // ClipRRect is a widget that clips its child using a rounded rectangle
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
 
-              // The posterPath is provided by the Flask backend
-              child: media.posterPath != null ? 
+                  // The posterPath is provided by the Flask backend
+                  child: media.posterPath != null ? 
 
-              // if the posterPath exists, download and display the image from the URL
-              Image.network(
-                media.posterPath!,
-                fit: BoxFit.cover, // BoxFit.cover scales the image to cover the entire widget area
+                  // if the posterPath exists, download and display the image from the URL
+                  Image.network(
+                    media.posterPath!,
+                    fit: BoxFit.cover, // BoxFit.cover scales the image to cover the entire widget area
 
-                // if the image fails to load, display a placeholder icon
-                errorBuilder: (context, error, stackTrace) => _buildPlaceholder(Icons.image_not_supported, "Image not available"),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
+                    // if the image fails to load, display a placeholder icon
+                    errorBuilder: (context, error, stackTrace) => _buildPlaceholder(Icons.image_not_supported, "Image not available"),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
 
-                    // Show a loading indicator while the image is being loaded
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes!)
-                          : null,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  );
-                }
-              )
-              : _buildPlaceholder(Icons.movie, "No Poster")
-            ) 
-          ),
+                        // Show a loading indicator while the image is being loaded
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes!)
+                              : null,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+                  )
+                  : _buildPlaceholder(Icons.movie, "No Poster")
+                ) 
+              ),
 
-          Expanded(
-            flex: 2,
-            child: Padding(
-              // padding just like in CSS
-              padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // Align children to the left edge
-                children: [
-                  // Tooltip widget to show full title on hover
-                  Tooltip(
-                    message: media.title,
-                    child: Text(
-                      media.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface
-                      ),
-                      maxLines: 2, // Limit title to one line
-                      overflow: TextOverflow.ellipsis, // Show ellipsis if title is too long
-                    ),
-                  ),
-                  const Spacer(), // Spacer to add space between title and rating
-                  Row(
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  // padding just like in CSS
+                  padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, // Align children to the left edge
                     children: [
-                      Text(
-                        _formatDate(media.releaseDate),
-                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
+                      // Tooltip widget to show full title on hover
+                      Tooltip(
+                        message: media.title,
+                        child: Text(
+                          media.title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface
+                          ),
+                          maxLines: 2, // Limit title to one line
+                          overflow: TextOverflow.ellipsis, // Show ellipsis if title is too long
+                        ),
                       ),
-                      
-                      const SizedBox(width: 8),
-                      Icon(Icons.star, color: Theme.of(context).colorScheme.primary, size: 12),
-                      const SizedBox(width: 2), // Space between star and rating
-                      Text(
-                        media.rating.toStringAsFixed(1),
-                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
+                      const Spacer(), // Spacer to add space between title and rating
+                      Row(
+                        children: [
+                          Text(
+                            _formatDate(media.releaseDate),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
+                          ),
+                          
+                          const SizedBox(width: 8),
+                          Icon(Icons.star, color: Theme.of(context).colorScheme.primary, size: 12),
+                          const SizedBox(width: 2), // Space between star and rating
+                          Text(
+                            media.rating.toStringAsFixed(1),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
+                          ),
+                        ],
                       ),
                     ],
-                  )
-                ],
-              ),
-            ),
+                  ),
+                ),
+              )
+            ],
           )
-        ],
+        )
       )
     );
   }
