@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/services/NavController.dart';
-import 'package:intl/intl.dart';
 
 
 class Mediacard extends StatelessWidget{
    final Media media;
   const Mediacard({super.key, required this.media});
-
-  String _formatDate(String dateString) {
-    if (dateString == 'Unknown' || dateString.isEmpty) return 'Unknown';
-    try{
-      final DateTime date = DateTime.parse(dateString);
-      return DateFormat('dd. MMM yyyy').format(date);
-    } catch (e) {
-      return dateString;
-    }
-  }
 
   @override
   Widget build(BuildContext context) // Buildcontext is a reference to the location of a widget in the widget tree
@@ -107,7 +96,7 @@ class Mediacard extends StatelessWidget{
                       Row(
                         children: [
                           Text(
-                            _formatDate(media.releaseDate),
+                            media.releaseDate,
                             style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onTertiary),
                           ),
                           

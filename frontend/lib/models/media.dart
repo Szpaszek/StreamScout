@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class Media {
   final int id;
   // this is needed to distinguish movie from tv 
@@ -27,15 +29,24 @@ class Media {
   factory Media.fromJson(Map<String, dynamic> json) {
     return Media(
       id: json['id'] as int? ?? 0,
-      mediaType: json['media_Type'] as String? ?? 'movie',
+      mediaType: json['media_type'] as String? ?? 'Unknown',
       title: json['title'] as String? ?? 'No Title',
       overview: json['overview'] as String? ?? 'No Overview',
-      releaseDate: json['release_date'] as String? ?? 'Unknown',
+      releaseDate: Media.formatDate(json['release_date'] as String? ?? 'Unknown'),
       posterPath: json['poster_path'] as String?,
       backdropPath: json['backdrop_path'] as String?,
       genreIds: (json['genre_ids'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
     );
+  }
+  static String formatDate(String dateString) {
+    if (dateString == 'Unknown' || dateString.isEmpty) return 'Unknown';
+    try{
+      final DateTime date = DateTime.parse(dateString);
+      return DateFormat('dd. MMM yyyy').format(date);
+    } catch (e) {
+      return dateString;
+    }
   }
 
 }
