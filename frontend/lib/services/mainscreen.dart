@@ -43,14 +43,19 @@ Widget build(BuildContext context) {
     ),
 
     // Display the currently selected page
-    body: ValueListenableBuilder<Media?>(valueListenable: NavController.selectedMedia,
+    body: ValueListenableBuilder<Media?>(
+     valueListenable: NavController.selectedMedia,
      builder: (context, selectedMedia, child) {
       if (selectedMedia != null) {
-        return MediaDetailsPage(media: selectedMedia,
-        onBack: () => NavController.closeDetails(),
+        return MediaDetailsPage(
+          media: selectedMedia,
+          onBack: () => NavController.closeDetails(),
         );
       }
-      return _pages.elementAt(_selectedIndex);
+      return IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      );
      }
      ),
 
