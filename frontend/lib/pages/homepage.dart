@@ -14,7 +14,6 @@ class HomePage extends StatefulWidget {
 
 // State class for HomePage
 class _HomePageState extends State<HomePage> {
-  
   List<Media> _popularContent = [];
   List<Media> _latestContent = [];
   List<Media> _upcomingMovies = [];
@@ -30,6 +29,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadAllData() async {
+    // Only show the big center loader if we don't have data yet
+    if (_popularContent.isEmpty) {
+      setState(() => _isLoading = true);
+    }
+
+    _errorMessage = null;
+
     try {
       final results = await Future.wait([
         _fetchContent(AppConfig.popularContentEndpoint),
@@ -45,42 +51,21 @@ class _HomePageState extends State<HomePage> {
           _isLoading = false;
         });
       }
-
-    } on FormatException {
+    } catch (e) {
       if (mounted) {
-        // Handle JSON format exceptions
         setState(() {
           _isLoading = false;
-          _errorMessage =
-              'Invalid data received from server. Expected JSON format.';
-        });
-      }
-    } catch (e){
-      if (mounted) {
-      // Handle non-200 responses
-        setState(() {
-          _isLoading = false;
-          _errorMessage =
-              'Failed to load movies: $e';
+          _errorMessage = 'Error: $e';
         });
       }
     }
   }
 
-  // TODO: save the state of the page, so the app does not need to fetch every time 
   // Function to fetch popular content from the backend server
   Future<List<Media>> _fetchContent(String apiEndpoint) async {
-
     List<Media> content = [];
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final uri = Uri.parse(
-      '${AppConfig.apiBaseUrl}$apiEndpoint',
-    );
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}$apiEndpoint');
 
     try {
       final response = await http.get(uri).timeout(const Duration(seconds: 5));
@@ -89,29 +74,22 @@ class _HomePageState extends State<HomePage> {
         // Decode the JSON response to a Dart object
         final data = jsonDecode(response.body);
 
-        // Ensure data is a dictionary 
-        if (data is Map<String, dynamic> && data.containsKey('movies') 
-        || data is Map<String, dynamic> && data.containsKey('media') 
-        || data is Map<String, dynamic> && data.containsKey('tvs')) {
+        final List<dynamic> results =
+            data['media'] ?? data['movies'] ?? data['tvs'];
 
-          final List<dynamic> results = data['media'] ?? data['movies'] ?? data['tvs'];
-
-          content = results
-              .map((movieJson) => Media.fromJson(movieJson)).toList();
-          return content;
-          
-        } else {
-          throw const FormatException("Invalid JSON format from server.");
-        }
+        content = results
+            .map((movieJson) => Media.fromJson(movieJson))
+            .toList();
+        return content;
       } else {
-          throw Exception("Server error: ${response.statusCode}");
+        throw Exception("Server error: ${response.statusCode}");
       }
     } catch (e) {
       rethrow;
     }
   }
 
-// TODO: Create large Banner for a popular movie
+  // TODO: Create large Banner for a popular movie
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -144,8 +122,32 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Text(_errorMessage!, style: TextStyle(fontSize: 18)),
+      return RefreshIndicator(
+        color: const Color(0xFF4EEAD7),
+        onRefresh: _loadAllData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Container(
+        // We set the height to the screen height so the 
+        // "Center" actually looks centered.
+        height: MediaQuery.of(context).size.height * 0.7, 
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.tealAccent, size: 40),
+              const SizedBox(height: 10),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, color: Color(0xFFBCCAD9)),
+              ),
+            ],
+          ),
+        ),
+      ),
+        ),
       );
     }
 
@@ -154,18 +156,26 @@ class _HomePageState extends State<HomePage> {
         child: Text('No popular content found', style: TextStyle(fontSize: 18)),
       );
     }
-
-      return CustomScrollView(
+    // to refresh content when swept down
+    return RefreshIndicator(
+      color: const Color(0xFF4EEAD7),
+      onRefresh: _loadAllData,
+      child: CustomScrollView(
+        // CRITICAL: This allows pull-to-refresh to work even when the list is short
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           // Title
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text("Popular", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+              child: Text(
+                "Popular",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
 
-          // 2. Horizontal Row 
+          // 2. Horizontal Row
           SliverToBoxAdapter(
             child: _buildHorizontalMediaCardRow(_popularContent),
           ),
@@ -174,11 +184,14 @@ class _HomePageState extends State<HomePage> {
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text("Recent Releases", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+              child: Text(
+                "Recent Releases",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
 
-          // 2. Horizontal Row 
+          // 2. Horizontal Row
           SliverToBoxAdapter(
             child: _buildHorizontalMediaCardRow(_latestContent),
           ),
@@ -187,16 +200,20 @@ class _HomePageState extends State<HomePage> {
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text("Upcoming Movies", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+              child: Text(
+                "Upcoming Movies",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
 
-          // 2. Horizontal Row 
+          // 2. Horizontal Row
           SliverToBoxAdapter(
             child: _buildHorizontalMediaCardRow(_upcomingMovies),
-          )
-        ]
-      );
+          ),
+        ],
+      ),
+    );
   }
 
   // horizontal list of cards
@@ -206,9 +223,7 @@ class _HomePageState extends State<HomePage> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: data.length,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         itemBuilder: (context, index) {
           return Padding(
             padding: const EdgeInsets.only(
@@ -222,5 +237,5 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
-  } 
+  }
 }
