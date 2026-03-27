@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/mainscreen.dart';
+import 'package:frontend/services/watchlistservice.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await WatchlistService.init();
   runApp(const MainApp());
 }
 

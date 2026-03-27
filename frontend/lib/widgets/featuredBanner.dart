@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/services/NavController.dart';
+import 'package:frontend/services/navcontroller.dart';
 
 class FeaturedBanner extends StatelessWidget {
   final Media media;

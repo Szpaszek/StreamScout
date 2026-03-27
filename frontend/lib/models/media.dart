@@ -39,6 +39,21 @@ class Media {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'media_type': mediaType,
+      'title': title,
+      'overview': overview,
+      'release_date': releaseDate,
+      'poster_path': posterPath,
+      'backdrop_path': backdropPath,
+      'genre_ids': genreIds,
+      'rating': rating,
+    };
+  }
+
   static String formatDate(String dateString) {
     if (dateString == 'Unknown' || dateString.isEmpty) return 'Unknown';
     try{

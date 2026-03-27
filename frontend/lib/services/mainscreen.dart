@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/pages/MediaDetailsPage.dart';
+import 'package:frontend/pages/mediadetailspage.dart';
 import 'package:frontend/pages/homepage.dart';
 import 'package:frontend/pages/watchlistpage.dart';
 import 'package:frontend/pages/searchpage.dart';
 import 'package:frontend/pages/settingspage.dart';
-import 'package:frontend/services/NavController.dart';
+import 'package:frontend/services/navcontroller.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
