@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/appconfig.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/widgets/featuredBanner.dart';
 import 'package:frontend/widgets/mediacard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   List<Media> _popularContent = [];
   List<Media> _latestContent = [];
   List<Media> _upcomingMovies = [];
-  // TODO: make loading for each list
+  Media? featuredMovie;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -45,7 +46,14 @@ class _HomePageState extends State<HomePage> {
 
       if (mounted) {
         setState(() {
-          _popularContent = results[0];
+          List<Media> fullPopularList = results[0];
+
+          if (fullPopularList.isNotEmpty) {
+          // .removeAt(0) removes the item and RETURNS it to the variable
+          featuredMovie = fullPopularList.removeAt(0); 
+        }
+
+          _popularContent = fullPopularList;
           _latestContent = results[1];
           _upcomingMovies = results[2];
           _isLoading = false;
@@ -164,12 +172,19 @@ class _HomePageState extends State<HomePage> {
         // CRITICAL: This allows pull-to-refresh to work even when the list is short
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          // 1. movie banner
+          if (featuredMovie != null)
+          SliverToBoxAdapter(
+            child: FeaturedBanner(
+              media: featuredMovie!)
+              ),
+
           // Title
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
-                "Popular",
+                "Popular Now",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
             ),
