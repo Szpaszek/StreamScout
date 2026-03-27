@@ -49,9 +49,9 @@ class _HomePageState extends State<HomePage> {
           List<Media> fullPopularList = results[0];
 
           if (fullPopularList.isNotEmpty) {
-          // .removeAt(0) removes the item and RETURNS it to the variable
-          featuredMovie = fullPopularList.removeAt(0); 
-        }
+            // .removeAt(0) removes the item and RETURNS it to the variable
+            featuredMovie = fullPopularList.removeAt(0);
+          }
 
           _popularContent = fullPopularList;
           _latestContent = results[1];
@@ -97,28 +97,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // TODO: Create large Banner for a popular movie
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              left: 16.0,
-              right: 8.0,
-              top: 8.0,
-              bottom: 8.0,
-            ),
-            child: Text(
-              'Home Page',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: _buildBody()),
-        ],
-      ),
-    );
+    return SafeArea(child: Expanded(child: _buildBody()));
   }
 
   // body of the screen
@@ -136,25 +117,32 @@ class _HomePageState extends State<HomePage> {
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Container(
-        // We set the height to the screen height so the 
-        // "Center" actually looks centered.
-        height: MediaQuery.of(context).size.height * 0.7, 
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.tealAccent, size: 40),
-              const SizedBox(height: 10),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Color(0xFFBCCAD9)),
+            // We set the height to the screen height so the
+            // "Center" actually looks centered.
+            height: MediaQuery.of(context).size.height * 0.7,
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.tealAccent,
+                    size: 40,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFFBCCAD9),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
         ),
       );
     }
@@ -174,10 +162,7 @@ class _HomePageState extends State<HomePage> {
         slivers: [
           // 1. movie banner
           if (featuredMovie != null)
-          SliverToBoxAdapter(
-            child: FeaturedBanner(
-              media: featuredMovie!)
-              ),
+            SliverToBoxAdapter(child: FeaturedBanner(media: featuredMovie!)),
 
           // Title
           const SliverToBoxAdapter(
