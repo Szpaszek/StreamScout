@@ -31,3 +31,24 @@ tmdb_client.Genres() ?
 - create a watchlist
 - create a multiuser movie vote mode
 
+# Planned Features:
+
+- homepage 
+    movie banner on top (done)
+    3 horizontal movie lists popular, recently released, upcoming (done)
+    movie vote feature
+
+- search page
+    searching for movies, tv shows, actors (done)
+
+- media details page
+    show details (done)
+    show actors
+    show similar movies
+
+- watchlistpage
+    show bookmarkek media (done)
+
+- settingspage
+    delete cache (shared preferences)
+
