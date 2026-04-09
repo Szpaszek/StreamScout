@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/appconfig.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/widgets/featuredBanner.dart';
+import 'package:frontend/widgets/featuredbanner.dart';
 import 'package:frontend/widgets/mediacard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

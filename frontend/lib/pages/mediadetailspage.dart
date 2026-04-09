@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/services/watchlistservice.dart';
