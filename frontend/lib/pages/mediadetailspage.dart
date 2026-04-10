@@ -88,7 +88,7 @@ class MediaDetailsPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      "${media.rating}",
+                      media.rating.toStringAsFixed(1),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
