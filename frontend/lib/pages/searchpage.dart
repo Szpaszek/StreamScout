@@ -8,7 +8,7 @@ import 'package:frontend/widgets/actorcard.dart';
 import 'package:frontend/widgets/mediacard.dart';
 import 'package:http/http.dart' as http;
 
-class SearchPage extends StatefulWidget{
+class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
   @override
@@ -17,14 +17,13 @@ class SearchPage extends StatefulWidget{
 
 // state class for SearchPage
 class _SearchPageState extends State<SearchPage> {
-
   // dynamic list to contain diffrent objects
   List<dynamic> _searchResults = [];
   bool _isLoading = false;
   String? _errorMessage;
   // to read the currect text and detect changes
   final TextEditingController _searchController = TextEditingController();
-  // a cooldown between api calls when user types a search query 
+  // a cooldown between api calls when user types a search query
   Timer? _debounce;
 
   // function to performe a multi search
@@ -74,13 +73,11 @@ class _SearchPageState extends State<SearchPage> {
       } else {
         throw Exception('Server returned ${response.statusCode}');
       }
-
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
           _errorMessage = 'Failed to search. Please try again.';
-          print("Search error: $e");
         });
       }
     }
@@ -97,13 +94,13 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
-    // destroy all dangerous objects 
+    // destroy all dangerous objects
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Column(
@@ -122,7 +119,10 @@ class _SearchPageState extends State<SearchPage> {
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
               ),
             ),
           ),
@@ -130,43 +130,47 @@ class _SearchPageState extends State<SearchPage> {
           // result area
           Expanded(
             child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
-            : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : _searchResults.isEmpty
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                : _errorMessage != null
+                ? Center(child: Text(_errorMessage!))
+                : _searchResults.isEmpty
                 ? _buildEmptyState()
                 : _buildResultsGrid(),
           ),
         ],
-      ) 
+      ),
     );
   }
 
-Widget _buildEmptyState() {
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        Icon(Icons.movie_creation_outlined, size: 80, color: Colors.white24),
-        SizedBox(height: 16),
-        Text(
-          "Find your next favorite",
-          style: TextStyle(color: Colors.white54, fontSize: 16),
-        )
-      ],
-    ),
-  );
-}
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.movie_creation_outlined, size: 80, color: Colors.white24),
+          SizedBox(height: 16),
+          Text(
+            "Find your next favorite",
+            style: TextStyle(color: Colors.white54, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
 
-Widget _buildResultsGrid() {
-  return GridView.builder(
-    //gridDelegate: gridDelegate, itemBuilder: itemBuilder
-    padding: const EdgeInsets.all(16),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      childAspectRatio: 0.65,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
+  Widget _buildResultsGrid() {
+    return GridView.builder(
+      //gridDelegate: gridDelegate, itemBuilder: itemBuilder
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.5,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
       ),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
@@ -174,24 +178,11 @@ Widget _buildResultsGrid() {
 
         if (item is Media) {
           return Mediacard(media: item);
-        }
-        else if (item is Actor) {
+        } else if (item is Actor) {
           return Actorcard(actor: item);
         }
         return const SizedBox.shrink();
       },
     );
-}
-
-// TODO: decorate
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return SafeArea(
-  //     child: Center(
-  //       child: 
-  //       Text('Search Page')
-  //     )
-  //   );
-  // }
+  }
 }

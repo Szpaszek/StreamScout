@@ -230,7 +230,7 @@ class _HomePageState extends State<HomePage> {
               right: 12.0, // Padding for each media element
             ),
             child: SizedBox(
-              width: 130, //fixed width for each card
+              width: 150, //fixed width for each card
               child: Mediacard(media: data[index]),
             ),
           );

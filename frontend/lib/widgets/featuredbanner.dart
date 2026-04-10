@@ -30,7 +30,7 @@ class FeaturedBanner extends StatelessWidget {
               fit: BoxFit.cover,
 
               // fallback if image fails to load
-              errorBuilder: (context, error, StackTrace) => SizedBox(
+              errorBuilder: (context, error, s) => SizedBox(
                 height: 220,
                 child: Center(
                   child: const Icon(Icons.movie, color: Colors.grey, size: 50),
@@ -39,7 +39,7 @@ class FeaturedBanner extends StatelessWidget {
             ),
           ),
 
-          // 2. gradient overlay 
+          // 2. gradient overlay
           Container(
             height: height,
             decoration: BoxDecoration(
@@ -67,7 +67,7 @@ class FeaturedBanner extends StatelessWidget {
                 Text(
                   media.title,
                   style: const TextStyle(
-                    fontSize: 28, 
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: -0.8,

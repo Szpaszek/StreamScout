@@ -48,7 +48,7 @@ class MediaDetailsPage extends StatelessWidget {
                 fit: BoxFit.cover,
 
                 // fallback if image fails to load
-                errorBuilder: (context, error, StackTrace) => SizedBox(
+                errorBuilder: (context, error, s) => SizedBox(
                   height: 220,
                   child: Center(
                     child: const Icon(
