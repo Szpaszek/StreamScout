@@ -211,6 +211,33 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: _buildHorizontalMediaCardRow(_upcomingMovies),
           ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsGeometry.fromLTRB(20, 20, 20, 40),
+              child: ElevatedButton(
+                onPressed: () {
+                  print("Movie Vote clicked");
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  minimumSize: const Size(100, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  "MOVIE VOTE",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
