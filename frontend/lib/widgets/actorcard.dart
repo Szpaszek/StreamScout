@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/actor.dart';
+import 'package:frontend/services/navcontroller.dart';
 
 class Actorcard extends StatelessWidget {
   final Actor actor;
@@ -9,66 +10,77 @@ class Actorcard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // TODO: decoration
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(10),
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
 
-              child: actor.profilePath != null
-                  ? Image.network(
-                      actor.profilePath!,
-                      fit: BoxFit.cover,
-
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildPlaceholder(
-                            Icons.image_not_supported,
-                            "Image not available",
-                          ),
-
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                      (loadingProgress.expectedTotalBytes!)
-                                : null,
-                            color: Colors.cyanAccent,
-                          ),
-                        );
-                      },
-                    )
-                  : _buildPlaceholder(
-                      Icons.account_circle_rounded,
-                      "No Profile",
-                    ),
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 8.0),
-              child: Tooltip(
-                message: actor.name,
-                child: Text(
-                  actor.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        child: InkWell(
+          onTap: () {
+            // Navigate to the details page
+            NavController.showActorDetails(actor);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(10),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+
+                  child: actor.profilePath != null
+                      ? Image.network(
+                          actor.profilePath!,
+                          fit: BoxFit.cover,
+
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildPlaceholder(
+                                Icons.image_not_supported,
+                                "Image not available",
+                              ),
+
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                          (loadingProgress.expectedTotalBytes!)
+                                    : null,
+                                color: Colors.cyanAccent,
+                              ),
+                            );
+                          },
+                        )
+                      : _buildPlaceholder(
+                          Icons.account_circle_rounded,
+                          "No Profile",
+                        ),
                 ),
               ),
-            ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 8.0),
+                  child: Tooltip(
+                    message: actor.name,
+                    child: Text(
+                      actor.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

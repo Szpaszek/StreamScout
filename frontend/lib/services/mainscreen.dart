@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/actor.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/pages/actordetailspage.dart';
 import 'package:frontend/pages/mediadetailspage.dart';
 import 'package:frontend/pages/homepage.dart';
 import 'package:frontend/pages/watchlistpage.dart';
@@ -54,6 +56,18 @@ class _MainScreenState extends State<MainScreen> {
               return MediaDetailsPage(
                 media: media,
                 onBack: () => NavController.closeDetails(),
+              );
+            },
+          ),
+
+          // show the actor details page on top of the current page if an actor is selected
+          ValueListenableBuilder<Actor?>(
+            valueListenable: NavController.selectedActor,
+            builder: (context, actor, _) {
+              if (actor == null) return const SizedBox.shrink();
+              return ActorDetailsPage(
+                actor: actor,
+                onBack: () => NavController.closeActorDetails(),
               );
             },
           ),
