@@ -37,6 +37,7 @@ tmdb_client.Genres() ?
     movie banner on top (done)
     3 horizontal movie lists popular, recently released, upcoming (done)
     movie vote feature
+        voting/roullet(random)
 
 - search page
     searching for movies, tv shows, actors (done)
@@ -45,6 +46,8 @@ tmdb_client.Genres() ?
     show details (done)
     show actors
     show similar movies
+
+- actor details page
 
 - watchlistpage
     show bookmarkek media (done)
