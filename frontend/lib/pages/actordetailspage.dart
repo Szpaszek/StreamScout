@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/actor.dart';
+import 'package:frontend/widgets/horizontalmediacardrow.dart';
 
 class ActorDetailsPage extends StatelessWidget {
   final Actor actor;
@@ -7,6 +8,7 @@ class ActorDetailsPage extends StatelessWidget {
 
   ActorDetailsPage({super.key, required this.actor, required this.onBack});
 
+  // TODO: more details using api and movies played in
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -44,31 +46,111 @@ class ActorDetailsPage extends StatelessWidget {
                   ),
                 ),
 
-                // actor profile picture
+                // profile header (image left, info right)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(2, 0, 2, 5),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      actor.profilePath ?? '',
-                      height: 220,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-
-                      // fallback if image fails to load
-                      errorBuilder: (context, error, s) => SizedBox(
-                        height: 220,
-                        child: Center(
-                          child: const Icon(
-                            Icons.movie,
-                            color: Colors.grey,
-                            size: 50,
+                  padding: const EdgeInsetsGeometry.symmetric(
+                    horizontal: 16.0,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // actor image
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          actor.profilePath ?? '',
+                          width: 140,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, s) => Container(
+                            width: 140,
+                            height: 200,
+                            color: Colors.white10,
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.grey,
+                              size: 50,
+                            ),
                           ),
                         ),
                       ),
+                      const SizedBox(width: 20),
+
+                      // actor info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 10),
+                            Text(
+                              actor.name,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // role tag
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              child: Text(
+                                "Actor",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Featured in ${actor.knownFor.length} top titles",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onTertiary,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // "Known For" section
+                const Padding(
+                  padding: EdgeInsetsGeometry.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Known For",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
+                const SizedBox(height: 15),
+
+                HorizontalMediaCardRow(mediaList: actor.knownFor),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
