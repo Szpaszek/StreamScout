@@ -88,7 +88,7 @@ class FeaturedBanner extends StatelessWidget {
                     const Icon(Icons.star_rounded, color: accentTeal, size: 22),
                     const SizedBox(width: 4),
                     Text(
-                      "${media.rating}  •  ${media.mediaType.toUpperCase()}",
+                      "${media.rating.toStringAsFixed(1)}  •  ${media.mediaType.toUpperCase()}",
                       style: const TextStyle(
                         color: accentTeal,
                         fontWeight: FontWeight.w600,

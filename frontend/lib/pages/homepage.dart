@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/appconfig.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/widgets/featuredbanner.dart';
-import 'package:frontend/widgets/mediacard.dart';
+import 'package:frontend/widgets/horizontalmediacardrow.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -177,7 +177,7 @@ class _HomePageState extends State<HomePage> {
 
           // 2. Horizontal Row
           SliverToBoxAdapter(
-            child: _buildHorizontalMediaCardRow(_popularContent),
+            child: HorizontalMediaCardRow(mediaList: _popularContent),
           ),
 
           // Title
@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> {
 
           // 2. Horizontal Row
           SliverToBoxAdapter(
-            child: _buildHorizontalMediaCardRow(_latestContent),
+            child: HorizontalMediaCardRow(mediaList: _latestContent),
           ),
 
           // Title
@@ -209,7 +209,7 @@ class _HomePageState extends State<HomePage> {
 
           // 2. Horizontal Row
           SliverToBoxAdapter(
-            child: _buildHorizontalMediaCardRow(_upcomingMovies),
+            child: HorizontalMediaCardRow(mediaList: _upcomingMovies),
           ),
 
           SliverToBoxAdapter(
@@ -239,29 +239,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // horizontal list of cards
-  Widget _buildHorizontalMediaCardRow(List<Media> data) {
-    return SizedBox(
-      height: 300, // fixed height for the horizontal scrolling row
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: data.length,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(
-              right: 12.0, // Padding for each media element
-            ),
-            child: SizedBox(
-              width: 150, //fixed width for each card
-              child: Mediacard(media: data[index]),
-            ),
-          );
-        },
       ),
     );
   }
