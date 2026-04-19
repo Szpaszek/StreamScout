@@ -42,4 +42,14 @@ class WatchlistService {
   static bool isBookmarked(int id) {
     return watchlistNotifier.value.any((item) => item.id == id);
   }
+
+  static Future<void> clearWatchlist() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // remove the specific key from the phone's storage
+    await prefs.remove(_storageKey);
+
+    // update the valuenotifier so the ui clears instantly
+    watchlistNotifier.value = [];
+  }
 }

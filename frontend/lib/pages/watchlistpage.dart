@@ -34,7 +34,7 @@ class WatchlistPage extends StatelessWidget {
     return const Center(
       child: Text(
         "Your list is empty",
-        style: TextStyle(color: Colors.black54),
+        style: TextStyle(color: Colors.white70, fontSize: 14),
       ),
     );
   }
