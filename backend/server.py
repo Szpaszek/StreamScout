@@ -3,7 +3,7 @@ import tmdbsimple as tmdb
 import os
 import requests.exceptions
 from dotenv import load_dotenv # Load environment variables from .env file
-from routes.movies import movies_bp
+from routes.media import media_bp
 from routes.search import search_bp
 from routes.discover import discover_bp
 
@@ -30,7 +30,7 @@ app = Flask(__name__)
 
 # separating apis into blueprints
 # register the movies blueprint with the url prefix
-app.register_blueprint(movies_bp, url_prefix='/api/movies')
+app.register_blueprint(media_bp, url_prefix='/api/media')
 app.register_blueprint(search_bp, url_prefix='/api/search')
 app.register_blueprint(discover_bp, url_prefix='/api/discover')
 
@@ -41,7 +41,9 @@ app.config['tmdb_client'] = tmdb_client
 # Movies:
 # tmdb_client.TV().popular DONE
 # tmdb_client.Movies().upcoming()
-# tmdb_client.Movies().similar_movies ?
+# tmdb_client.Movies().similar_movies 
+# tmdb_client.TV().similar
+
 # tmdb_client.Movies().latest
 # tmdb_client.Movies().recommendations ?
 # tmdb_client.Movies().watch_providers

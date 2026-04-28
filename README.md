@@ -41,6 +41,7 @@ tmdb_client.Genres() ?
 
 - search page
     searching for movies, tv shows, actors (done)
+    genres
 
 - media details page
     show details (done)
