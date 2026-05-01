@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:frontend/appconfig.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/services/watchlistservice.dart';
+import 'package:http/http.dart' as http;
 
-class MediaDetailsPage extends StatelessWidget {
+class MediaDetailsPage extends StatefulWidget {
   final Media media;
   final VoidCallback onBack;
 
@@ -11,6 +15,43 @@ class MediaDetailsPage extends StatelessWidget {
     required this.media,
     required this.onBack,
   });
+
+  @override
+  State<MediaDetailsPage> createState() => _MediaDetailsPageState();
+}
+
+class _MediaDetailsPageState extends State<MediaDetailsPage> {
+  late Future<Map<String, dynamic>> detailsFuture;
+  @override
+  void initState() {
+    super.initState();
+
+    detailsFuture = _fetchDetails();
+  }
+
+  Future<Map<String, dynamic>> _fetchDetails() async {
+    final uri = Uri.parse(
+      '${AppConfig.apiBaseUrl}${AppConfig.mediaDetailsEndpoint}/${widget.media.mediaType}/${widget.media.id}',
+    );
+
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final rawdata = jsonDecode(response.body);
+
+        final details = widget.media.mediaType == 'movie'
+            ? rawdata['movie']
+            : rawdata['tv'];
+
+        return details;
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   // TODO: add watch provider (seperate api), and more details (runtime etc.) using details api and similar (own api), thrailer (own api)
   @override
@@ -23,7 +64,7 @@ class MediaDetailsPage extends StatelessWidget {
         if (didPop) return;
 
         // trigger custom close logic
-        onBack();
+        widget.onBack();
       },
 
       child: Scaffold(
@@ -37,7 +78,7 @@ class MediaDetailsPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: TextButton.icon(
-                    onPressed: onBack,
+                    onPressed: widget.onBack,
                     icon: Icon(
                       Icons.arrow_back,
                       color: Theme.of(context).colorScheme.secondary,
@@ -57,7 +98,7 @@ class MediaDetailsPage extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.network(
-                      media.backdropPath ?? '',
+                      widget.media.backdropPath ?? '',
                       height: 220,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -84,7 +125,7 @@ class MediaDetailsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        media.title,
+                        widget.media.title,
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -103,17 +144,17 @@ class MediaDetailsPage extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            media.rating.toStringAsFixed(1),
+                            widget.media.rating.toStringAsFixed(1),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(width: 15),
-                          _buildInfoTag(media.mediaType.toUpperCase()),
+                          _buildInfoTag(widget.media.mediaType.toUpperCase()),
                           const SizedBox(width: 15),
                           Text(
-                            media.releaseDate,
+                            widget.media.releaseDate,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onTertiary,
                               fontSize: 14,
@@ -124,12 +165,14 @@ class MediaDetailsPage extends StatelessWidget {
                             valueListenable: WatchlistService.watchlistNotifier,
                             builder: (context, list, _) {
                               final isSaved = WatchlistService.isBookmarked(
-                                media.id,
+                                widget.media.id,
                               );
 
                               return IconButton(
                                 onPressed: () =>
-                                    WatchlistService.toggleWatchlist(media),
+                                    WatchlistService.toggleWatchlist(
+                                      widget.media,
+                                    ),
                                 icon: Icon(
                                   isSaved
                                       ? Icons.bookmark
@@ -147,6 +190,67 @@ class MediaDetailsPage extends StatelessWidget {
                         ],
                       ),
 
+                      FutureBuilder<Map<String, dynamic>>(
+                        future: detailsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsetsGeometry.symmetric(
+                                vertical: 20,
+                              ),
+                              child: LinearProgressIndicator(minHeight: 2),
+                            );
+                          }
+
+                          if (snapshot.hasError || !snapshot.hasData)
+                            return const SizedBox.shrink();
+
+                          final data = snapshot.data!;
+                          final isMovie = widget.media.mediaType == 'movie';
+
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 15),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (isMovie)
+                                  _buildInfoLine(
+                                    Icons.timer_10_outlined,
+                                    "${data['runtime']} min",
+                                  )
+                                else ...[
+                                  _buildInfoLine(
+                                    Icons.layers_outlined,
+                                    "${data['number_of_seasons']} Seasons • ${data['number_of_episodes']} Episodes",
+                                  ),
+                                  const SizedBox(height: 5),
+                                  _buildInfoLine(
+                                    Icons.info_outline,
+                                    "Status: ${data['status']}",
+                                  ),
+                                ],
+                                const SizedBox(height: 10),
+
+                                // Genres Display
+                                Text(
+                                  (data['genres'] as List)
+                                      .map((g) => g['name'])
+                                      .join(' • '),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onTertiary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
                       const SizedBox(height: 25),
 
                       // 4. overview
@@ -160,7 +264,7 @@ class MediaDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        media.overview,
+                        widget.media.overview,
                         style: TextStyle(
                           fontSize: 15,
                           color: Theme.of(context).colorScheme.onTertiary,
@@ -190,6 +294,19 @@ class MediaDetailsPage extends StatelessWidget {
         text,
         style: const TextStyle(color: Colors.cyanAccent, fontSize: 11),
       ),
+    );
+  }
+
+  Widget _buildInfoLine(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.secondary),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }
