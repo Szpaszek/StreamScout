@@ -151,7 +151,31 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                             ),
                           ),
                           const SizedBox(width: 15),
+                          // madia type tag
                           _buildInfoTag(widget.media.mediaType.toUpperCase()),
+                          const SizedBox(width: 15),
+                          // FutureBuilder for the Runtime or number of seasons
+                          FutureBuilder<Map<String, dynamic>>(
+                            future: detailsFuture,
+                            builder: (context, snapshot) {
+                              // While loading, we show nothing or a tiny space
+                              if (snapshot.connectionState ==
+                                      ConnectionState.waiting ||
+                                  snapshot.hasError) {
+                                return const SizedBox.shrink();
+                              }
+
+                              final data = snapshot.data!;
+
+                              final isMovie = widget.media.mediaType == 'movie';
+                              // Movies use 'runtime', TV might not have a single value (can use first episode)
+                              final String runtime = isMovie
+                                  ? "${data['runtime'] ?? 0} min"
+                                  : "${data['number_of_seasons'] ?? 0} S • ${data['number_of_episodes'] ?? 0} Ep";
+
+                              return _buildInfoLine(Icons.timer_outlined ,runtime);
+                            },
+                          ),
                           const SizedBox(width: 15),
                           Text(
                             widget.media.releaseDate,
@@ -210,28 +234,10 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                           final isMovie = widget.media.mediaType == 'movie';
 
                           return Padding(
-                            padding: const EdgeInsets.only(top: 15),
+                            padding: const EdgeInsets.only(top: 0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (isMovie)
-                                  _buildInfoLine(
-                                    Icons.timer_10_outlined,
-                                    "${data['runtime']} min",
-                                  )
-                                else ...[
-                                  _buildInfoLine(
-                                    Icons.layers_outlined,
-                                    "${data['number_of_seasons']} Seasons • ${data['number_of_episodes']} Episodes",
-                                  ),
-                                  const SizedBox(height: 5),
-                                  _buildInfoLine(
-                                    Icons.info_outline,
-                                    "Status: ${data['status']}",
-                                  ),
-                                ],
-                                const SizedBox(height: 10),
-
                                 // Genres Display
                                 Text(
                                   (data['genres'] as List)
@@ -245,13 +251,21 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
+                                const SizedBox(height: 10),
+                                if (!isMovie) ...[
+                                  const SizedBox(height: 5),
+                                  _buildInfoLine(
+                                    Icons.info_outline,
+                                    "Status: ${data['status']}",
+                                  ),
+                                ]
                               ],
                             ),
                           );
                         },
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 20),
 
                       // 4. overview
                       Text(
