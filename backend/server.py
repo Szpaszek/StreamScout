@@ -6,6 +6,7 @@ from dotenv import load_dotenv # Load environment variables from .env file
 from routes.media import media_bp
 from routes.search import search_bp
 from routes.discover import discover_bp
+from routes.person import person_bp
 
 load_dotenv()
 
@@ -33,6 +34,7 @@ app = Flask(__name__)
 app.register_blueprint(media_bp, url_prefix='/api/media')
 app.register_blueprint(search_bp, url_prefix='/api/search')
 app.register_blueprint(discover_bp, url_prefix='/api/discover')
+app.register_blueprint(person_bp, url_prefix='/api/person')
 
 # application configuration, shares global objects with blueprints
 app.config['tmdb_client'] = tmdb_client
@@ -84,5 +86,4 @@ def test():
 
 
 if __name__ == '__main__':
-    print("--- Starting Flask Server on http://127.0.0.1:5000 ---")
     app.run(debug=True)
