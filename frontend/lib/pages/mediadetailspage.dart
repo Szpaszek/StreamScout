@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/appconfig.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/services/watchlistservice.dart';
+import 'package:frontend/widgets/horizontalmediacardrow.dart';
 import 'package:http/http.dart' as http;
 
 class MediaDetailsPage extends StatefulWidget {
@@ -22,11 +23,14 @@ class MediaDetailsPage extends StatefulWidget {
 
 class _MediaDetailsPageState extends State<MediaDetailsPage> {
   late Future<Map<String, dynamic>> detailsFuture;
+  late Future<List<Media>> similarContent;
+
   @override
   void initState() {
     super.initState();
 
     detailsFuture = _fetchDetails();
+    similarContent = _fetchSimilarContent();
   }
 
   Future<Map<String, dynamic>> _fetchDetails() async {
@@ -45,6 +49,29 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
             : rawdata['tv'];
 
         return details;
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Media>> _fetchSimilarContent() async {
+    final uri = Uri.parse(
+      '${AppConfig.apiBaseUrl}${AppConfig.mediaDetailsEndpoint}/${widget.media.mediaType}/${widget.media.id}/similar',
+    );
+
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final rawdata = jsonDecode(response.body);
+
+        final List<dynamic> results =
+            rawdata['media'] ?? rawdata['movies'] ?? rawdata['tvs'];
+
+        return results.map((movieJson) => Media.fromJson(movieJson)).toList();
       } else {
         throw Exception("Server error: ${response.statusCode}");
       }
@@ -173,7 +200,10 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                   ? "${data['runtime'] ?? 0} min"
                                   : "${data['number_of_seasons'] ?? 0} S • ${data['number_of_episodes'] ?? 0} Ep";
 
-                              return _buildInfoLine(Icons.timer_outlined ,runtime);
+                              return _buildInfoLine(
+                                Icons.timer_outlined,
+                                runtime,
+                              );
                             },
                           ),
                           const SizedBox(width: 15),
@@ -258,7 +288,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                     Icons.info_outline,
                                     "Status: ${data['status']}",
                                   ),
-                                ]
+                                ],
                               ],
                             ),
                           );
@@ -284,6 +314,45 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                           color: Theme.of(context).colorScheme.onTertiary,
                           height: 1.6, // adds breathing room between lines
                         ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      Text(
+                        "Similar",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      FutureBuilder<List<Media>>(
+                        future: similarContent, 
+                        builder: (context, snapshot) {
+                          // show a loader while waiting
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 300, // Match your Row height
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          // handle errors or empty results
+                          if (snapshot.hasError ||
+                              !snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return const SizedBox.shrink(); // hide the section if nothing found
+                          }
+
+                          // data has arrived, pass the real List<Media>
+                          return HorizontalMediaCardRow(
+                            mediaList: snapshot.data!,
+                          );
+                        },
                       ),
                     ],
                   ),
