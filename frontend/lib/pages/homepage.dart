@@ -25,7 +25,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Initial state setup which fetches movies only once when the widget is created
+  // initial state setup which fetches movies only once when the widget is created
   @override
   void initState() {
     super.initState();
@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadAllData() async {
-    // Only show the big center loader if we don't have data yet
+    // only show the big center loader if we don't have data yet
     if (_popularContent.isEmpty) {
       setState(() => _isLoading = true);
     }
@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Function to fetch popular content from the backend server
+  // function to fetch content from the backend server
   Future<List<Media>> _fetchContent(String apiEndpoint) async {
     List<Media> content = [];
 
@@ -167,7 +167,7 @@ class _HomePageState extends State<HomePage> {
           if (featuredMovie != null)
             SliverToBoxAdapter(child: FeaturedBanner(media: featuredMovie!)),
 
-          // Title
+          // title
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
@@ -178,12 +178,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // 2. Horizontal Row
+          // horizontal row popular content
           SliverToBoxAdapter(
             child: HorizontalMediaCardRow(mediaList: _popularContent),
           ),
 
-          // Title
+          // title
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
@@ -194,7 +194,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // 2. Horizontal Row
+          // horizontal row latest
           SliverToBoxAdapter(
             child: HorizontalMediaCardRow(mediaList: _latestContent),
           ),
@@ -210,7 +210,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // 2. Horizontal Row
+          // horizontal Row
           SliverToBoxAdapter(
             child: HorizontalMediaCardRow(mediaList: _upcomingMovies),
           ),
@@ -322,7 +322,7 @@ void _handleHostRoom() {
   // Tell the server we are hosting
   SocketService().hostRoom(roomCode);
 
-  // TODO: Navigate to your VotingRoomScreen (we will build this next)
+  // TODO: Navigate to VotingRoomScreen 
   print("Hosting Room: $roomCode");
 }
 

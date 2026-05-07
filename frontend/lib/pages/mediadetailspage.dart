@@ -365,7 +365,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
     );
   }
 
-  // Helper widget for the small "Type" tag (Movie/TV)
+  // helper widget for the small "Type" tag (Movie/TV)
   Widget _buildInfoTag(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

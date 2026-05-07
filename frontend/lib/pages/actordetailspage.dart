@@ -12,7 +12,7 @@ class ActorDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // Intercept back button press to close the details view instead of navigating back
+      // intercept back button press to close the details view instead of navigating back
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         // if the page already popped do nothing, otherwise call the onBack callback
@@ -28,7 +28,7 @@ class ActorDetailsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start, //left aligned
               children: [
-                // Back button
+                // back button
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: TextButton.icon(

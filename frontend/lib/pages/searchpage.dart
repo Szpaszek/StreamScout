@@ -105,7 +105,7 @@ class _SearchPageState extends State<SearchPage> {
     return SafeArea(
       child: Column(
         children: [
-          // Search Bar Area
+          // search Bar Area
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(

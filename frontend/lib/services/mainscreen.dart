@@ -17,10 +17,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Keep track of the currently selected page index
+  // keep track of the currently selected page index
   int _selectedIndex = 0;
 
-  // List of pages to display
+  // list of pages to display
   final List<Widget> _pages = <Widget>[
     HomePage(),
     SearchPage(),
@@ -28,7 +28,7 @@ class _MainScreenState extends State<MainScreen> {
     SettingsPage(),
   ];
 
-  // Function to update the index when a new item is tapped
+  // function to update the index when a new item is tapped
   void _onItemTapped(int index) {
     NavController.closeDetails();
     setState(() {
@@ -41,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Stream Scout')),
 
-      // Display the currently selected page
+      // display the currently selected page
       body: Stack(
         children: [
           // indexedStack do the BottomNav pages don't get reseted
