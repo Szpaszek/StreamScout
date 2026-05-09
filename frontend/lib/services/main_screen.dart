@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/actor.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/pages/actordetailspage.dart';
-import 'package:frontend/pages/mediadetailspage.dart';
-import 'package:frontend/pages/homepage.dart';
-import 'package:frontend/pages/watchlistpage.dart';
-import 'package:frontend/pages/searchpage.dart';
-import 'package:frontend/pages/settingspage.dart';
-import 'package:frontend/services/navcontroller.dart';
+import 'package:frontend/pages/actor_details_page.dart';
+import 'package:frontend/pages/media_details_page.dart';
+import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/pages/watchlist_page.dart';
+import 'package:frontend/pages/search_page.dart';
+import 'package:frontend/pages/settings_page.dart';
+import 'package:frontend/services/nav_controller.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

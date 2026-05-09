@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/services/navcontroller.dart';
-import 'package:frontend/services/watchlistservice.dart';
+import 'package:frontend/services/nav_controller.dart';
+import 'package:frontend/services/watchlist_service.dart';
 
 class WatchlistTile extends StatelessWidget {
   final Media media;

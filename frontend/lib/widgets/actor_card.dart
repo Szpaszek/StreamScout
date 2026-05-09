@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/actor.dart';
-import 'package:frontend/services/navcontroller.dart';
+import 'package:frontend/services/nav_controller.dart';
 
 class Actorcard extends StatelessWidget {
   final Actor actor;

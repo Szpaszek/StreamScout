@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/mainscreen.dart';
-import 'package:frontend/services/socketservice.dart';
-import 'package:frontend/services/watchlistservice.dart';
+import 'package:frontend/services/main_screen.dart';
+import 'package:frontend/services/socket_service.dart';
+import 'package:frontend/services/watchlist_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

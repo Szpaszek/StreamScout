@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/watchlistservice.dart';
+import 'package:frontend/services/watchlist_service.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

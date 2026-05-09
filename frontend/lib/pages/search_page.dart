@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:frontend/appconfig.dart';
+import 'package:frontend/app_config.dart';
 import 'package:frontend/models/actor.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/widgets/actorcard.dart';
-import 'package:frontend/widgets/mediacard.dart';
+import 'package:frontend/widgets/actor_card.dart';
+import 'package:frontend/widgets/media_card.dart';
 import 'package:http/http.dart' as http;
 
 class SearchPage extends StatefulWidget {

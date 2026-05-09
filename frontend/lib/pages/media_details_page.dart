@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:frontend/appconfig.dart';
+import 'package:frontend/app_config.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/services/watchlistservice.dart';
-import 'package:frontend/widgets/horizontalmediacardrow.dart';
+import 'package:frontend/services/watchlist_service.dart';
+import 'package:frontend/widgets/horizontal_media_card_row.dart';
 import 'package:http/http.dart' as http;
 
 class MediaDetailsPage extends StatefulWidget {

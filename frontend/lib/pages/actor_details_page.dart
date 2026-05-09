@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/actor.dart';
-import 'package:frontend/widgets/horizontalmediacardrow.dart';
+import 'package:frontend/widgets/horizontal_media_card_row.dart';
 
 class ActorDetailsPage extends StatelessWidget {
   final Actor actor;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/services/watchlistservice.dart';
-import 'package:frontend/widgets/watchlisttile.dart';
+import 'package:frontend/services/watchlist_service.dart';
+import 'package:frontend/widgets/watchlist_tile.dart';
 
 class WatchlistPage extends StatelessWidget {
   const WatchlistPage({super.key});

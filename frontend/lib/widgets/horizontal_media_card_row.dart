@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/widgets/mediacard.dart';
+import 'package:frontend/widgets/media_card.dart';
 
 class HorizontalMediaCardRow extends StatelessWidget {
   final List<Media> mediaList;
