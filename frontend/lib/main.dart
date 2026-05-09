@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/mainscreen.dart';
+import 'package:frontend/services/socketservice.dart';
 import 'package:frontend/services/watchlistservice.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WatchlistService.init();
+  SocketService().init();
   runApp(const MainApp());
 }
 
@@ -16,31 +18,9 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // theme
-    //colors Color(0xFF0F1117);
-    //Color(0xFF1E222D);
-    //Color.fromARGB(255, 22, 27, 39);
-    //const Color kBackgroundColor = Color.fromARGB(255, 23, 27, 36); // very dark blue background
-    //const Color kBackgroundColor = Color.fromARGB(255, 30, 34, 44); // very dark blue background
-    //const Color kBackgroundColor = Color.fromARGB(255, 20, 23, 31); // very dark blue background
-    //const Color kBackgroundColor = Color.fromARGB(255, 24, 27, 39); // very dark blue background
-    const Color kBackgroundColor = Color.fromARGB(
-      255,
-      16,
-      18,
-      26,
-    ); // very dark blue background
-    const Color kSurfaceColor = Color.fromARGB(
-      255,
-      34,
-      39,
-      51,
-    ); // lighter blue-grey for cards/nav bar
-    const Color kNavBarColor = Color.fromARGB(
-      255,
-      40,
-      42,
-      46,
-    ); // darker gray for NavBar
+    const Color kBackgroundColor = Color.fromARGB(255, 16, 18, 26); // very dark blue background
+    const Color kSurfaceColor = Color.fromARGB(255, 34, 39, 51); // lighter blue-grey for cards/nav bar
+    const Color kNavBarColor = Color.fromARGB(255, 40, 42, 46); // darker gray for NavBar
     const Color kAccentColor = Color(0xFF2CD9C6); // vibrant Teal color
     const Color kTextSecondary = Color(0xFF8F9BB3); // nuted grey for subtitles
 

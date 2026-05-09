@@ -102,7 +102,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(child: Expanded(child: _buildBody()));
+    return SafeArea(child: _buildBody());
   }
 
   // body of the screen
@@ -316,17 +316,17 @@ Widget _buildDialogOption({required IconData icon, required String title, requir
 
 // 1. Logic for Hosting
 void _handleHostRoom() {
-  // Generate a random 6-digit code
+  // generate a random 6-digit code
   String roomCode = (Random().nextInt(900000) + 100000).toString();
   
-  // Tell the server we are hosting
+  // tell the server to host the room
   SocketService().hostRoom(roomCode);
 
   // TODO: Navigate to VotingRoomScreen 
   print("Hosting Room: $roomCode");
 }
 
-// 2. Logic for Joining
+// logic for Joining
 void _showJoinInputDialog() {
   final TextEditingController _codeController = TextEditingController();
   

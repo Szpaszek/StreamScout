@@ -214,7 +214,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                               fontSize: 14,
                             ),
                           ),
-                          const SizedBox(width: 15),
+                          const SizedBox(width: 10),
                           ValueListenableBuilder<List<Media>>(
                             valueListenable: WatchlistService.watchlistNotifier,
                             builder: (context, list, _) {

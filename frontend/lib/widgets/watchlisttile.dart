@@ -55,7 +55,7 @@ class WatchlistTile extends StatelessWidget {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       media.releaseDate,
                       style: TextStyle(
@@ -71,7 +71,7 @@ class WatchlistTile extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primary,
                           size: 18,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           media.rating.toStringAsFixed(1),
                           style: TextStyle(
