@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/services/nav_controller.dart';
 import 'package:frontend/widgets/media_card.dart';
 
 class HorizontalMediaCardRow extends StatelessWidget {
@@ -23,7 +24,7 @@ class HorizontalMediaCardRow extends StatelessWidget {
             ),
             child: SizedBox(
               width: 150, //fixed width for each card
-              child: Mediacard(media: mediaList[index]),
+              child: Mediacard(media: mediaList[index], onTap: () {NavController.showDetails(mediaList[index]);}),
             ),
           );
         },

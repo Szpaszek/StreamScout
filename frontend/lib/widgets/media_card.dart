@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/services/nav_controller.dart';
 
 
 class Mediacard extends StatelessWidget{
    final Media media;
-  const Mediacard({super.key, required this.media});
+   final VoidCallback? onTap;
+
+  const Mediacard({super.key, required this.media, this.onTap});
 
   @override
   Widget build(BuildContext context) // Buildcontext is a reference to the location of a widget in the widget tree
@@ -26,11 +27,7 @@ class Mediacard extends StatelessWidget{
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          onTap: ()
-          {
-            // Navigate to the details page
-            NavController.showDetails(media);
-            },
+          onTap: onTap,
       //  Column widget to arrange child widgets vertically
           child: Column( // a child is a widget that is contained within another widget
             crossAxisAlignment: CrossAxisAlignment.stretch,

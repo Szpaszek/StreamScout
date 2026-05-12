@@ -1,3 +1,4 @@
+import 'package:frontend/models/media.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../app_config.dart';
 
@@ -27,4 +28,11 @@ class SocketService {
   void hostRoom(String code) {
     socket.emit('create_room', {'code': code});
   }
+
+  void addMedia(String roomCode, Media media) {
+   socket.emit('add_media', {
+    'room': roomCode,
+    'media': media.toJson(), // Make sure your Media model has toJson()
+  });
+}
 }

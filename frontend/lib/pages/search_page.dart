@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/app_config.dart';
 import 'package:frontend/models/actor.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/services/nav_controller.dart';
 import 'package:frontend/widgets/actor_card.dart';
 import 'package:frontend/widgets/media_card.dart';
 import 'package:http/http.dart' as http;
@@ -177,7 +178,7 @@ class _SearchPageState extends State<SearchPage> {
         final item = _searchResults[index];
 
         if (item is Media) {
-          return Mediacard(media: item);
+          return Mediacard(media: item, onTap: () {NavController.showDetails(item);});
         } else if (item is Actor) {
           return Actorcard(actor: item);
         }

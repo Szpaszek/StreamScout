@@ -3,4 +3,4 @@ requests
 dotenv 
 tmdbsimple
 flask-socketio
-redis
+tinydb

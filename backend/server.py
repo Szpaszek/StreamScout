@@ -1,18 +1,16 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room
 import tmdbsimple as tmdb
 import os
 from dotenv import load_dotenv # Load environment variables from .env file
-import redis
-import json
+from tinydb import TinyDB, Query, where
+import time
 from routes.media import media_bp
 from routes.search import search_bp
 from routes.discover import discover_bp
 from routes.person import person_bp
 
 load_dotenv()
-
-app = Flask(__name__)
 
 # get TMDB API key and read access token from environment variables
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
@@ -68,47 +66,120 @@ app.config['tmdb_client'] = tmdb_client
 if tmdb_client.API_KEY is None or TMDB_READ_ACCESS_TOKEN is None:
     raise ValueError("TMDB_API_KEY and TMDB_READ_ACCESS_TOKEN must be set in environment variables.")
 
-# Redis connection (default port is 6379)
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+# TinyDB
+db = TinyDB('backend/db.json')
+rooms_table = db.table('rooms')
+Room = Query()
+
+# 1 hour experation
+def is_expired(created_at):
+    return (time.time() - created_at) > 3600
+
 socketio = SocketIO(app, cors_allowed_origins='*')
+
+@socketio.on('add_media')
+def handle_add_media(data):
+    room_code = data['room']
+    media_data = data['media'] # The full movie object from Flutter
+    user_id = request.sid      # Unique ID for this connection # type: ignore
+    
+    room = rooms_table.get(Room.code == room_code)
+    
+    if not room or is_expired(room['created_at']): # type: ignore
+        emit('error', {'msg': 'Room expired or not found'})
+        return
+
+    # Check if this user already added something
+    # Store submissions as: { 'media_id': { 'data': {...}, 'added_by': 'sid' } }
+    submissions = room.get('submissions', {}) # type: ignore
+    
+    already_added = any(s['added_by'] == user_id for s in submissions.values())
+    
+    if already_added:
+        emit('error', {'msg': 'You can only suggest 1 movie!'})
+        return
+
+    # Add the new media
+    media_id = str(media_data['id'])
+    submissions[media_id] = {
+        'data': media_data,
+        'added_by': user_id,
+        'votes': 0
+    }
+    
+    rooms_table.update({'submissions': submissions}, Room.code == room_code)
+    
+    # Tell everyone in the room a new movie is up for voting
+    emit('media_added', media_data, to=room_code)
+    print(f"User {user_id} added {media_data['title']} to room {room_code}")
+
+
 
 @socketio.on('create_room')
 def handle_create(data):
     room_code = data['code']
-    # initializing the room in Redis with a 1-hour expiration
-    r.hset(f"room:{room_code}", "status", "waiting")
-    r.expire(f"room:{room_code}", 3600)
+    
+    # create room structure
+    rooms_table.insert({
+        'code': room_code,
+        'status': 'waiting',
+        'submissions': {}, # media_id + vote_count
+        'voted_users': [],
+        'created_at': time.time()
+    })
     join_room(room_code)
     print(f"Room {room_code} created.")
+
+@socketio.on('join_room')
+def handle_join(data):
+    room_code = data['room']
+    join_room(room_code)
+    print(f"User {request.sid} joined {room_code}") # type: ignore
 
 @socketio.on('vote')
 def handle_vote(data):
     room_code = data['room']
-    movie_id = data['movie_id']
-
-    # atomic increment in Redis prevents rare conditions
-    # if 10 people vote at the exact same time
-    new_votes = r.hincrby(f"room:{room_code}", movie_id, 1)
-
-    # broadcast the updated count to everyone in that specific room
-    emit('update_votes', {'movie_id': movie_id, 'votes': new_votes}, to=room_code)
+    media_id = str(data['media_id'])
+    user_id = request.sid # This is the unique ID for the current connection # type: ignore
     
-# for testing purposes
-@app.route('/api/test', methods=['GET'])
-def test():
+    room = rooms_table.get(Room.code == room_code)
+    if not room or is_expired(room['created_at']): # type: ignore
+        emit('error', {'msg': 'Room expired or not found'})
+        return
 
-     # get the movie object
-    series = tmdb_client.TV()
+    # 1. Get the lists from the DB
+    submissions = room.get('submissions', {}) # type: ignore
+    voted_users = room.get('voted_users', []) # List of SIDs who have voted # type: ignore
 
-    # get popular movies
-    popular_series_response = series.popular()
+    # 2. CHECK: Has this user already voted in this room?
+    if user_id in voted_users:
+        emit('error', {'msg': 'You have already cast your vote!'}, room=user_id) # type: ignore
+        return
 
-    optimized_results = []
-    # for movie in popular_movies_response.get('results', []):
-    #     processed_movie = _process_tmdb_result(movie)
-    #     optimized_results.append(processed_movie)
-
-    return popular_series_response
+    if media_id in submissions:
+        # 3. CHECK: Is the user voting for their own movie?
+        if submissions[media_id]['added_by'] == user_id:
+            emit('error', {'msg': 'You cannot vote for your own suggestion!'}, room=user_id) # type: ignore
+            return
+            
+        # 4. SUCCESS: Update the vote count
+        submissions[media_id]['votes'] += 1
+        
+        # 5. RECORD: Add this user to the "voted_users" list
+        voted_users.append(user_id)
+        
+        # 6. SAVE: Update TinyDB
+        rooms_table.update({
+            'submissions': submissions,
+            'voted_users': voted_users
+        }, Room.code == room_code)
+        
+        # 7. BROADCAST: Tell everyone the new score
+        emit('update_votes', {
+            'movie_id': media_id, 
+            'votes': submissions[media_id]['votes']
+        }, to=room_code)
 
 
 if __name__ == '__main__':

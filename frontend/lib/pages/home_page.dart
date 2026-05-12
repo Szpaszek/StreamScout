@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:frontend/app_config.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/pages/voting_room_page.dart';
 import 'package:frontend/services/socket_service.dart';
 import 'package:frontend/widgets/featured_banner.dart';
 import 'package:frontend/widgets/horizontal_media_card_row.dart';
@@ -246,112 +247,142 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+// TODO: adjust the code below
   void _showVoteOptionsDialog() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFF1A1D1F), // Match your dark theme
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Movie Vote Party", 
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1D1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            "Movie Vote Party",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Option 1: HOST
+              _buildDialogOption(
+                icon: Icons.add_to_queue,
+                title: "Host a Room",
+                subtitle: "Start a room and invite friends",
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleHostRoom();
+                },
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white10),
+              const SizedBox(height: 16),
+              // Option 2: JOIN
+              _buildDialogOption(
+                icon: Icons.group_add_outlined,
+                title: "Join a Room",
+                subtitle: "Enter a code to join friends",
+                onTap: () {
+                  Navigator.pop(context);
+                  _showJoinInputDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Helper for the list items in the dialog
+  Widget _buildDialogOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
           children: [
-            // Option 1: HOST
-            _buildDialogOption(
-              icon: Icons.add_to_queue,
-              title: "Host a Room",
-              subtitle: "Start a room and invite friends",
-              onTap: () {
-                Navigator.pop(context);
-                _handleHostRoom();
-              },
-            ),
-            const SizedBox(height: 16),
-            const Divider(color: Colors.white10),
-            const SizedBox(height: 16),
-            // Option 2: JOIN
-            _buildDialogOption(
-              icon: Icons.group_add_outlined,
-              title: "Join a Room",
-              subtitle: "Enter a code to join friends",
-              onTap: () {
-                Navigator.pop(context);
-                _showJoinInputDialog();
-              },
+            Icon(icon, color: Colors.tealAccent, size: 30),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-      );
-    },
-  );
-}
+      ),
+    );
+  }
 
-// Helper for the list items in the dialog
-Widget _buildDialogOption({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
-  return InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    child: Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.tealAccent, size: 30),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
+  // 1. Logic for Hosting
+  void _handleHostRoom() {
+    // generate a random 6-digit code
+    String roomCode = (Random().nextInt(900000) + 100000).toString();
+
+    // tell the server to host the room
+    SocketService().hostRoom(roomCode);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => VotingRoomPage(roomCode: roomCode)),
+    );
+  }
+
+  // logic for Joining
+  void _showJoinInputDialog() {
+    final TextEditingController _codeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Enter Room Code"),
+        content: TextField(
+          controller: _codeController,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          decoration: const InputDecoration(hintText: "123456"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              SocketService().joinRoom(_codeController.text);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => VotingRoomPage(roomCode: _codeController.toString()),
+                ),
+              );
+            },
+            child: const Text("Join"),
           ),
         ],
       ),
-    ),
-  );
-}
-
-// 1. Logic for Hosting
-void _handleHostRoom() {
-  // generate a random 6-digit code
-  String roomCode = (Random().nextInt(900000) + 100000).toString();
-  
-  // tell the server to host the room
-  SocketService().hostRoom(roomCode);
-
-  // TODO: Navigate to VotingRoomScreen 
-  print("Hosting Room: $roomCode");
-}
-
-// logic for Joining
-void _showJoinInputDialog() {
-  final TextEditingController _codeController = TextEditingController();
-  
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Enter Room Code"),
-      content: TextField(
-        controller: _codeController,
-        keyboardType: TextInputType.number,
-        maxLength: 6,
-        decoration: const InputDecoration(hintText: "123456"),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-        ElevatedButton(
-          onPressed: () {
-            SocketService().joinRoom(_codeController.text);
-            Navigator.pop(context);
-            // TODO: Navigate to VotingRoomScreen
-          }, 
-          child: const Text("Join")
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 }
