@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/actor.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/pages/media_details_page.dart';
+import 'package:frontend/pages/search_page.dart';
 
 class NavController {
   // Media Navigation
@@ -9,6 +11,30 @@ class NavController {
 
   static void showDetails(Media media) {
     selectedMedia.value = media;
+  }
+
+  static void showDetailsForVoting(
+    BuildContext context,
+    Media media,
+    String? roomCode,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MediaDetailsPage(
+          media: media,
+          onBack: () => Navigator.pop(context),
+          roomCode: roomCode, // Passing it down the line
+        ),
+      ),
+    );
+  }
+
+  static void openSearchPage(BuildContext context, String roomCode) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SearchPage(roomCode: roomCode)),
+    );
   }
 
   static void closeDetails() {

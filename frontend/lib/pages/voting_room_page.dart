@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/pages/search_page.dart';
 import 'package:frontend/services/socket_service.dart';
 import 'package:frontend/widgets/media_card.dart';
 
@@ -33,6 +34,7 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
           String id = data['movie_id'].toString();
           _votesMap[id] = data['votes'];
         });
+        _updateAndSortMedia();
       }
     });
 
@@ -47,19 +49,31 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
     });
 
     socket.on('error', (data) {
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(data['msg']), backgroundColor: Colors.red),
-    );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['msg']), backgroundColor: Colors.red),
+        );
+      }
+    });
   }
-});
+
+  void _updateAndSortMedia() {
+    if (!mounted) return;
+    setState(() {
+      // Sort media by vote count (highest first)
+      _roomMedia.sort((a, b) {
+        int votesA = _votesMap[a.id.toString()] ?? 0;
+        int votesB = _votesMap[b.id.toString()] ?? 0;
+        return votesB.compareTo(votesA);
+      });
+    });
   }
 
   void _castVote(String mediaId) {
     HapticFeedback.lightImpact();
     SocketService().socket.emit('vote', {
       'room': widget.roomCode,
-      'movie_id': mediaId
+      'movie_id': mediaId,
     });
   }
 
@@ -72,55 +86,73 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
           children: [
             const Text("Voting Room", style: TextStyle(fontSize: 18)),
             Text(
-              "Code: ${widget.roomCode}", 
-              style: const TextStyle(fontSize: 12, color: Colors.tealAccent)
+              "Code: ${widget.roomCode}",
+              style: const TextStyle(fontSize: 12, color: Colors.tealAccent),
             ),
           ],
         ),
         actions: [
-        IconButton(
-          icon: const Icon(Icons.add, color: Colors.tealAccent),
-          onPressed: () => _openAddMediaDialog(),
-        ),
-      ],
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.tealAccent),
+            onPressed: () => _openAddMediaDialog(),
+          ),
+        ],
       ),
-      body: _roomMedia.isEmpty 
-          ? const Center(child: Text("No media added yet.")) 
+      body: _roomMedia.isEmpty
+          ? const Center(child: Text("No media added yet."))
           : _buildMediaList(),
     );
   }
 
   Widget _buildMediaList() {
-    // Sort media by vote count (highest first)
-    _roomMedia.sort((a, b) {
-      int votesA = _votesMap[a.id.toString()] ?? 0;
-      int votesB = _votesMap[b.id.toString()] ?? 0;
-      return votesB.compareTo(votesA);
-    });
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
+    return GridView.builder(
+      //gridDelegate: gridDelegate, itemBuilder: itemBuilder
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.5,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
       itemCount: _roomMedia.length,
       itemBuilder: (context, index) {
-        final media = _roomMedia[index];
-        final currentVotes = _votesMap[media.id.toString()] ?? 0;
+        final item = _roomMedia[index];
+        final currentVotes = _votesMap[item.id.toString()] ?? 0;
 
         return Column(
           children: [
-            Mediacard(media: media, onTap: () => _castVote(media.id.toString()),),
-            SizedBox(height: 5),
-            Text("$currentVotes", style: const TextStyle(fontSize: 12, color: Colors.tealAccent))
+            Expanded(
+              child: Mediacard(
+                media: item,
+                onTap: () => _castVote(item.id.toString()),
+              )
+            ),
+            const SizedBox(height: 8),
+            Text(
+            "$currentVotes Votes",
+            style: const TextStyle(
+              fontSize: 14, 
+              fontWeight: FontWeight.bold,
+              color: Colors.tealAccent
+            ),
+          ),
           ],
-        );  
+        );
+
+        // return Mediacard(
+        //   media: item,
+        //   onTap: () => {_castVote}
+        //   );
       },
     );
   }
 
-// TODO: implement
   void _openAddMediaDialog() {
-  // For now, this is a placeholder. 
-  // Ideally, you'd navigate to your Search page and pass the roomCode back.
-  // When a movie is selected:
-  // SocketService().addMedia(widget.roomCode, selectedMovie);
-}
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => SearchPage(roomCode: widget.roomCode),
+    );
+  }
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/app_config.dart';
 import 'package:frontend/models/media.dart';
+import 'package:frontend/services/socket_service.dart';
 import 'package:frontend/services/watchlist_service.dart';
 import 'package:frontend/widgets/horizontal_media_card_row.dart';
 import 'package:http/http.dart' as http;
@@ -10,11 +11,13 @@ import 'package:http/http.dart' as http;
 class MediaDetailsPage extends StatefulWidget {
   final Media media;
   final VoidCallback onBack;
+  final String? roomCode;
 
   const MediaDetailsPage({
     super.key,
     required this.media,
     required this.onBack,
+    this.roomCode,
   });
 
   @override
@@ -297,6 +300,23 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
 
                       const SizedBox(height: 20),
 
+                      if (widget.roomCode != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.tealAccent,
+                              foregroundColor: Colors.black,
+                              minimumSize: const Size(double.infinity, 50),
+                            ),
+                            icon: const Icon(Icons.add_to_photos),
+                            label: const Text("Suggest for Voting"),
+                            onPressed: () => _suggestMovie(context),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
                       // 4. overview
                       Text(
                         "Overview",
@@ -330,7 +350,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                       const SizedBox(height: 10),
 
                       FutureBuilder<List<Media>>(
-                        future: similarContent, 
+                        future: similarContent,
                         builder: (context, snapshot) {
                           // show a loader while waiting
                           if (snapshot.connectionState ==
@@ -391,5 +411,20 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
         ),
       ],
     );
+  }
+
+  void _suggestMovie(BuildContext context) {
+    // Emit the socket event
+    SocketService().addMedia(widget.roomCode!, widget.media);
+
+    // Feedback to user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Suggested ${widget.media.title}!")),
+    );
+
+    // Pop back to the Voting Room
+    // Pop twice: once from Details, once from Search
+    Navigator.of(context).pop(); // Closes MediaDetails
+    Navigator.of(context).pop(); // Closes SearchPage
   }
 }

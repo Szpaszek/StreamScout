@@ -10,7 +10,9 @@ import 'package:frontend/widgets/media_card.dart';
 import 'package:http/http.dart' as http;
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final String? roomCode;
+
+  const SearchPage({super.key, this.roomCode});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -103,7 +105,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return Material(
       child: Column(
         children: [
           // search Bar Area
@@ -178,7 +180,11 @@ class _SearchPageState extends State<SearchPage> {
         final item = _searchResults[index];
 
         if (item is Media) {
-          return Mediacard(media: item, onTap: () {NavController.showDetails(item);});
+          if (widget.roomCode != null) {
+            return Mediacard(media: item, onTap: () {NavController.showDetailsForVoting(context, item, widget.roomCode);});
+          } else {
+            return Mediacard(media: item, onTap: () {NavController.showDetails(item);});
+          }
         } else if (item is Actor) {
           return Actorcard(actor: item);
         }
