@@ -134,8 +134,31 @@ def handle_create(data):
 @socketio.on('join_room')
 def handle_join(data):
     room_code = data['room']
+
+    if room_code is None:
+        emit('error', {'msg': 'There is no room with this code!'})
+        return
+    
     join_room(room_code)
     print(f"User {request.sid} joined {room_code}") # type: ignore
+
+    room = rooms_table.get(Room.code == room_code)
+    submissions = room.get('submissions', {}) # type: ignore
+
+    current_media = []
+    current_votes = {}
+
+    for media_id, wrapper_data in submissions.items():
+        str_id = str(media_id)
+
+        current_media.append(wrapper_data['data'])
+
+        current_votes[str_id] = wrapper_data.get('votes', 0)
+
+    emit('room_state', {
+        'media_list': current_media,
+        'votes': current_votes
+    }, room=request.sid)  # type: ignore
 
 @socketio.on('vote')
 def handle_vote(data):
@@ -177,7 +200,7 @@ def handle_vote(data):
         
         # 7. BROADCAST: Tell everyone the new score
         emit('update_votes', {
-            'movie_id': media_id, 
+            'media_id': media_id, 
             'votes': submissions[media_id]['votes']
         }, to=room_code)
 

@@ -247,8 +247,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-// TODO: adjust the code below
+  // TODO: adjust the code below
   void _showVoteOptionsDialog() {
     showDialog(
       context: context,
@@ -371,11 +370,11 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              SocketService().joinRoom(_codeController.text);
+              final code = _codeController.text.trim();
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => VotingRoomPage(roomCode: _codeController.toString()),
+                  builder: (_) => VotingRoomPage(roomCode: code),
                 ),
               );
             },

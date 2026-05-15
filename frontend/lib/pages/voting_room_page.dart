@@ -16,22 +16,24 @@ class VotingRoomPage extends StatefulWidget {
 class _VotingRoomScreenState extends State<VotingRoomPage> {
   Map<String, int> _votesMap = {};
   List<Media> _roomMedia = [];
+  final _socket = SocketService().socket;
 
   @override
   void initState() {
     super.initState();
     _setupSocketListeners();
+    _socket.emit('join_room', {'room': widget.roomCode});
   }
 
   void _setupSocketListeners() {
-    final socket = SocketService().socket;
+    
 
     // Listen for vote updates from server
-    socket.on('update_votes', (data) {
+    _socket.on('update_votes', (data) {
       if (mounted) {
         setState(() {
           // Sync key with your Flask 'emit' (movie_id)
-          String id = data['movie_id'].toString();
+          String id = data['media_id'].toString();
           _votesMap[id] = data['votes'];
         });
         _updateAndSortMedia();
@@ -39,7 +41,7 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
     });
 
     // Listen for new media being added to the room
-    socket.on('media_added', (data) {
+    _socket.on('media_added', (data) {
       if (mounted) {
         setState(() {
           _roomMedia.add(Media.fromJson(data));
@@ -48,7 +50,23 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
       }
     });
 
-    socket.on('error', (data) {
+    _socket.on('room_state', (data) {
+      if (mounted) {
+        setState(() {
+          final List<dynamic> mediaJsonList = data['media_list'] ?? [];
+          final Map<String, dynamic> votesJson = data['votes'] ?? {};
+
+          // Parse and populate the existing media
+          _roomMedia = mediaJsonList.map((item) => Media.fromJson(item)).toList();
+
+          // Parse and populate the existing votes
+          _votesMap = votesJson.map((key, value) => MapEntry(key, value as int)); 
+        });
+        _updateAndSortMedia();
+      }
+    });
+
+    _socket.on('error', (data) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['msg']), backgroundColor: Colors.red),
@@ -73,7 +91,7 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
     HapticFeedback.lightImpact();
     SocketService().socket.emit('vote', {
       'room': widget.roomCode,
-      'movie_id': mediaId,
+      'media_id': mediaId,
     });
   }
 
@@ -138,11 +156,6 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
           ),
           ],
         );
-
-        // return Mediacard(
-        //   media: item,
-        //   onTap: () => {_castVote}
-        //   );
       },
     );
   }
