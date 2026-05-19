@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/media.dart';
@@ -17,6 +18,12 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
   Map<String, int> _votesMap = {};
   List<Media> _roomMedia = [];
   final _socket = SocketService().socket;
+  String _roomStatus = 'suggesting';
+  bool _isHost = false;
+  int _userCount = 1;
+  Media? _winnerMedia;
+  int _secondsRemaining = 30; // 300 in release
+  Timer? _countdownTimer;
 
   @override
   void initState() {
@@ -26,7 +33,11 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
   }
 
   void _setupSocketListeners() {
-    
+    _socket.on('user_count_update', (data) {
+      if (mounted) {
+        setState(() => _userCount = data['count']);
+      }
+    });
 
     // Listen for vote updates from server
     _socket.on('update_votes', (data) {
@@ -53,16 +64,28 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
     _socket.on('room_state', (data) {
       if (mounted) {
         setState(() {
-          final List<dynamic> mediaJsonList = data['media_list'] ?? [];
-          final Map<String, dynamic> votesJson = data['votes'] ?? {};
-
-          // Parse and populate the existing media
-          _roomMedia = mediaJsonList.map((item) => Media.fromJson(item)).toList();
-
-          // Parse and populate the existing votes
-          _votesMap = votesJson.map((key, value) => MapEntry(key, value as int)); 
+          _roomStatus = data['status'] ?? 'suggesting';
+          _isHost = data['is_host'] ?? false;
+          _userCount = data['user_count'] ?? 1;
         });
-        _updateAndSortMedia();
+        if (_roomStatus == 'voting' && data['timer_end'] != null) {
+          _startLocalTimer(data['timer_end']);
+        }
+      }
+    });
+
+    _socket.on('phase_changed', (data) {
+      if (mounted) {
+        setState(() {
+          _roomStatus = data['status'];
+          if (data['winner'] != null) {
+            _winnerMedia = Media.fromJson(data['winner']);
+          }
+        });
+
+        if (_roomStatus == 'voting' && data['timer_end'] != null) {
+          _startLocalTimer(data['timer_end']);
+        }
       }
     });
 
@@ -95,6 +118,34 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
     });
   }
 
+  void _startLocalTimer(dynamic serverTimerEnd) {
+    _countdownTimer?.cancel();
+
+    double endTime = (serverTimerEnd is num) ? serverTimerEnd.toDouble() : 0.0;
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final now = DateTime.now().millisecondsSinceEpoch / 1000;
+      final remaining = (endTime - now).round();
+
+      if (remaining <= 0) {
+        timer.cancel();
+        setState(() {
+          _secondsRemaining = 0;
+        });
+      } else {
+        setState(() {
+          _secondsRemaining = remaining;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,7 +155,7 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
           children: [
             const Text("Voting Room", style: TextStyle(fontSize: 18)),
             Text(
-              "Code: ${widget.roomCode}",
+              "Room: ${widget.roomCode} ($_userCount Online)",
               style: const TextStyle(fontSize: 12, color: Colors.tealAccent),
             ),
           ],
@@ -116,13 +167,134 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
           ),
         ],
       ),
-      body: _roomMedia.isEmpty
-          ? const Center(child: Text("No media added yet."))
-          : _buildMediaList(),
+      body: _buildPhaseBody(),
     );
   }
 
-  Widget _buildMediaList() {
+  Widget _buildPhaseBody() {
+    switch (_roomStatus) {
+      case 'suggesting':
+        return _buildSuggestingPhase();
+      case 'voting':
+        return _buildVotingPhase();
+      case 'results':
+        return _buildResultsPhase();
+      default:
+        return const Center(child: CircularProgressIndicator());
+    }
+  }
+
+  Widget _buildSuggestingPhase() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "Suggested Movies (${_roomMedia.length})",
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: _roomMedia.isEmpty
+              ? const Center(child: Text("Waiting for movie suggestions..."))
+              : _buildMediaGrid(enableVoting: false),
+        ),
+        if (_isHost)
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: () =>
+                  _socket.emit('start_voting', {'room': widget.roomCode}),
+              child: const Text("START VOTING NOW"),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildVotingPhase() {
+    int minutes = _secondsRemaining ~/ 60;
+    int seconds = _secondsRemaining % 60;
+    String timeStr = "$minutes:${seconds.toString().padLeft(2, '0')}";
+
+    return Column(
+      children: [
+        Container(
+          color: Colors.redAccent.withOpacity(0.1),
+          padding: const EdgeInsets.all(12),
+          width: double.infinity,
+          child: Text(
+            "VOTE! Time Remaining: $timeStr",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.redAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Expanded(child: _buildMediaGrid(enableVoting: true)),
+      ],
+    );
+  }
+
+  Widget _buildResultsPhase() {
+    if (_winnerMedia == null) {
+      return const Center(child: Text("No winner. No movies were voted on!"));
+    }
+
+    return Center(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 1200),
+        curve: Curves.elasticOut,
+        builder: (context, value, child) {
+          return Transform.scale(
+            scale: value,
+            child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "🎉 THE WINNER IS 🎉",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.amber,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Using a larger display for the winner
+            SizedBox(
+              height: 350,
+              width: 240,
+              child: Card(
+                elevation: 10,
+                clipBehavior: Clip.antiAlias,
+                child: Image.network(
+                  _winnerMedia?.posterPath ?? '',
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => const Icon(Icons.movie, size: 100),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _winnerMedia!.title,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaGrid({required bool enableVoting}) {
     return GridView.builder(
       //gridDelegate: gridDelegate, itemBuilder: itemBuilder
       padding: const EdgeInsets.all(16),
@@ -142,18 +314,18 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
             Expanded(
               child: Mediacard(
                 media: item,
-                onTap: () => _castVote(item.id.toString()),
-              )
+                onTap: () => enableVoting? _castVote(item.id.toString()) : null,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-            "$currentVotes Votes",
-            style: const TextStyle(
-              fontSize: 14, 
-              fontWeight: FontWeight.bold,
-              color: Colors.tealAccent
+              "$currentVotes Votes",
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.tealAccent,
+              ),
             ),
-          ),
           ],
         );
       },
