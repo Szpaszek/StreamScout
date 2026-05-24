@@ -1,9 +1,8 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/app_config.dart';
 import 'package:frontend/models/media.dart';
-import 'package:frontend/pages/voting_room_page.dart';
+import 'package:frontend/services/nav_controller.dart';
 import 'package:frontend/services/socket_service.dart';
 import 'package:frontend/widgets/featured_banner.dart';
 import 'package:frontend/widgets/horizontal_media_card_row.dart';
@@ -169,12 +168,12 @@ class _HomePageState extends State<HomePage> {
             SliverToBoxAdapter(child: FeaturedBanner(media: featuredMovie!)),
 
           // title
-          const SliverToBoxAdapter(
+           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 "Popular Now",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),
@@ -185,12 +184,13 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // title
-          const SliverToBoxAdapter(
+          
+           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 "Recent Releases",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),
@@ -201,12 +201,12 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // Title
-          const SliverToBoxAdapter(
+           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 "Upcoming Movies",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),
@@ -225,6 +225,7 @@ class _HomePageState extends State<HomePage> {
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Theme.of(context).cardColor,
                   minimumSize: const Size(100, 56),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -247,7 +248,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // TODO: adjust the code below
   void _showVoteOptionsDialog() {
     showDialog(
       context: context,
@@ -343,10 +343,7 @@ class _HomePageState extends State<HomePage> {
     // tell the server to host the room
     SocketService().hostRoom(roomCode);
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => VotingRoomPage(roomCode: roomCode)),
-    );
+    NavController.joinVotingRoom(context, roomCode);
   }
 
   // logic for Joining
@@ -371,12 +368,8 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton(
             onPressed: () {
               final code = _codeController.text.trim();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => VotingRoomPage(roomCode: code),
-                ),
-              );
+              Navigator.pop(context);
+              NavController.joinVotingRoom(context, code);
             },
             child: const Text("Join"),
           ),

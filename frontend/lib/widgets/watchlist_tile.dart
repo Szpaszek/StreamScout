@@ -11,7 +11,7 @@ class WatchlistTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => NavController.showDetails(media),
+      onTap: () => NavController.showMediaDetails(context, media),
       child: Container(
         height: 100,
         decoration: BoxDecoration(

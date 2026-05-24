@@ -181,9 +181,9 @@ class _SearchPageState extends State<SearchPage> {
 
         if (item is Media) {
           if (widget.roomCode != null) {
-            return Mediacard(media: item, onTap: () {NavController.showDetailsForVoting(context, item, widget.roomCode);});
+            return Mediacard(media: item, onTap: () {NavController.showMediaDetailsForVoting(context, item, widget.roomCode);});
           } else {
-            return Mediacard(media: item, onTap: () {NavController.showDetails(item);});
+            return Mediacard(media: item, onTap: () {NavController.showMediaDetails(context, item);});
           }
         } else if (item is Person) {
           return Personcard(person: item);

@@ -17,7 +17,7 @@ class FeaturedBanner extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // Navigate to the details page
-        NavController.showDetails(media);
+        NavController.showMediaDetails(context, media);
       },
       child: Stack(
         children: [

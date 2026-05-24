@@ -24,7 +24,12 @@ class HorizontalMediaCardRow extends StatelessWidget {
             ),
             child: SizedBox(
               width: 150, //fixed width for each card
-              child: Mediacard(media: mediaList[index], onTap: () {NavController.showDetails(mediaList[index]);}),
+              child: Mediacard(
+                media: mediaList[index],
+                onTap: () {
+                  NavController.showMediaDetails(context, mediaList[index]);
+                },
+              ),
             ),
           );
         },

@@ -2,18 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/person.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/pages/media_details_page.dart';
+import 'package:frontend/pages/person_details_page.dart';
 import 'package:frontend/pages/search_page.dart';
+import 'package:frontend/pages/voting_room_page.dart';
 
 class NavController {
-  // Media Navigation
-  // ValueNotifier holds the current movie to show in detail view
-  static final ValueNotifier<Media?> selectedMedia = ValueNotifier(null);
 
-  static void showDetails(Media media) {
-    selectedMedia.value = media;
+  static void showMediaDetails(BuildContext context, Media media) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MediaDetailsPage(
+          media: media,
+          onBack: () => Navigator.pop(context),
+        ),
+      ),
+    );
   }
 
-  static void showDetailsForVoting(
+  static void showMediaDetailsForVoting(
     BuildContext context,
     Media media,
     String? roomCode,
@@ -37,24 +44,27 @@ class NavController {
     );
   }
 
-  static void closeDetails() {
-    selectedMedia.value = null;
+  static void showPersonDetails(BuildContext context, Person person) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PersonDetailsPage(
+          person: person,
+          onBack: () => Navigator.pop(context),
+        ),
+      ),
+    );
   }
 
-  // Person Navigation
-  static final ValueNotifier<Person?> selectedPerson = ValueNotifier(null);
-
-  static void showPersonDetails(Person person) {
-    selectedPerson.value = person;
+  static void joinVotingRoom(BuildContext context, String roomCode) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VotingRoomPage(
+          roomCode: roomCode,
+        ),
+      ),
+    );
   }
 
-  static void closePersonDetails() {
-    selectedPerson.value = null;
-  }
-
-  // helper to clear everything at once
-  static void clearAll() {
-    selectedMedia.value = null;
-    selectedPerson.value = null;
-  }
 }

@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/person.dart';
-import 'package:frontend/models/media.dart';
-import 'package:frontend/pages/person_details_page.dart';
-import 'package:frontend/pages/media_details_page.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/watchlist_page.dart';
 import 'package:frontend/pages/search_page.dart';
 import 'package:frontend/pages/settings_page.dart';
-import 'package:frontend/services/nav_controller.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,16 +16,15 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   // list of pages to display
-  final List<Widget> _pages = <Widget>[
+  static const List<Widget> _pages = <Widget>[
     HomePage(),
     SearchPage(),
     WatchlistPage(),
     SettingsPage(),
   ];
 
-  // function to update the index when a new item is tapped
+  // Function to update the index when a new item is tapped
   void _onItemTapped(int index) {
-    NavController.closeDetails();
     setState(() {
       _selectedIndex = index;
     });
@@ -41,38 +35,8 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Stream Scout')),
 
-      // display the currently selected page
-      body: Stack(
-        children: [
-          // indexedStack do the BottomNav pages don't get reseted
-          IndexedStack(index: _selectedIndex, children: _pages),
-
-          // show the details page on top of the current page if a media is selected
-          ValueListenableBuilder<Media?>(
-            valueListenable: NavController.selectedMedia,
-            builder: (context, media, _) {
-              if (media == null) return const SizedBox.shrink();
-
-              return MediaDetailsPage(
-                media: media,
-                onBack: () => NavController.closeDetails(),
-              );
-            },
-          ),
-
-          // show the person details page on top of the current page if an actor is selected
-          ValueListenableBuilder<Person?>(
-            valueListenable: NavController.selectedPerson,
-            builder: (context, person, _) {
-              if (person == null) return const SizedBox.shrink();
-              return PersonDetailsPage(
-                person: person,
-                onBack: () => NavController.closePersonDetails(),
-              );
-            },
-          ),
-        ],
-      ),
+      // Display the currently selected page
+      body: Center(child: _pages.elementAt(_selectedIndex)),
 
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

@@ -26,7 +26,7 @@ class Personcard extends StatelessWidget {
 
         child: InkWell(
           // Navigate to the details page
-          onTap: () => NavController.showPersonDetails(person),
+          onTap: () => NavController.showPersonDetails(context, person),
           
           // fix Inkwell splash constraint issues
           borderRadius: BorderRadius.circular(16),
