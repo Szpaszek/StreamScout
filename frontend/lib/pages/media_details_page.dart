@@ -330,7 +330,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                       Text(
                         widget.media.overview,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           color: Theme.of(context).colorScheme.onTertiary,
                           height: 1.6, // adds breathing room between lines
                         ),

@@ -1,4 +1,4 @@
-import 'package:intl/intl.dart';
+import 'package:frontend/Utilities.dart';
 
 class Media {
   final int id;
@@ -32,7 +32,7 @@ class Media {
       mediaType: json['media_type'] as String? ?? 'Unknown',
       title: json['title'] as String? ?? 'No Title',
       overview: json['overview'] as String? ?? 'No Overview',
-      releaseDate: Media.formatDate(json['release_date'] as String? ?? 'Unknown'),
+      releaseDate: Utilities.formatDate(json['release_date'] as String? ?? 'Unknown'),
       posterPath: json['poster_path'] as String?,
       backdropPath: json['backdrop_path'] as String?,
       genreIds: (json['genre_ids'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
@@ -53,15 +53,4 @@ class Media {
       'rating': rating,
     };
   }
-
-  static String formatDate(String dateString) {
-    if (dateString == 'Unknown' || dateString.isEmpty) return 'Unknown';
-    try{
-      final DateTime date = DateTime.parse(dateString);
-      return DateFormat('dd. MMM yyyy').format(date);
-    } catch (e) {
-      return dateString;
-    }
-  }
-
 }

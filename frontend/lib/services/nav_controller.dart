@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/actor.dart';
+import 'package:frontend/models/person.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/pages/media_details_page.dart';
 import 'package:frontend/pages/search_page.dart';
@@ -41,20 +41,20 @@ class NavController {
     selectedMedia.value = null;
   }
 
-  // Actor Navigation
-  static final ValueNotifier<Actor?> selectedActor = ValueNotifier(null);
+  // Person Navigation
+  static final ValueNotifier<Person?> selectedPerson = ValueNotifier(null);
 
-  static void showActorDetails(Actor actor) {
-    selectedActor.value = actor;
+  static void showPersonDetails(Person person) {
+    selectedPerson.value = person;
   }
 
-  static void closeActorDetails() {
-    selectedActor.value = null;
+  static void closePersonDetails() {
+    selectedPerson.value = null;
   }
 
   // helper to clear everything at once
   static void clearAll() {
     selectedMedia.value = null;
-    selectedActor.value = null;
+    selectedPerson.value = null;
   }
 }

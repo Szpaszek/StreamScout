@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/app_config.dart';
-import 'package:frontend/models/actor.dart';
+import 'package:frontend/models/person.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/services/nav_controller.dart';
-import 'package:frontend/widgets/actor_card.dart';
+import 'package:frontend/widgets/person_card.dart';
 import 'package:frontend/widgets/media_card.dart';
 import 'package:http/http.dart' as http;
 
@@ -61,7 +61,7 @@ class _SearchPageState extends State<SearchPage> {
           final mediaType = item['media_type'];
 
           if (mediaType == 'person') {
-            parsedResults.add(Actor.fromJson(item));
+            parsedResults.add(Person.fromJson(item));
           } else if (mediaType == 'movie' || mediaType == 'tv') {
             parsedResults.add(Media.fromJson(item));
           }
@@ -185,8 +185,8 @@ class _SearchPageState extends State<SearchPage> {
           } else {
             return Mediacard(media: item, onTap: () {NavController.showDetails(item);});
           }
-        } else if (item is Actor) {
-          return Actorcard(actor: item);
+        } else if (item is Person) {
+          return Personcard(person: item);
         }
         return const SizedBox.shrink();
       },

@@ -17,7 +17,7 @@ def get_person_details(person_id):
 
         return jsonify({
             "status": "success",
-            "media": response,
+            "details": response,
             "total_results": response.get('total_results') # total number of upcoming movies needed for pagination
         }), 200
 
@@ -42,15 +42,28 @@ def get_person_credits(person_id):
 
         response = people.combined_credits()
 
+        raw_cast = response.get('cast', [])
+
+        # remove duplicates
+        seen_ids = set()
+        unique_cast = []
+        for item in raw_cast:
+            item_id = item.get('id')
+            if item_id and item_id not in seen_ids:
+                seen_ids.add(item_id)
+                unique_cast.append(item)
+
+        # Sort by popularity in descending order (highest popularity first)
+        unique_cast.sort(key=lambda x: x.get('popularity', 0.0), reverse=True)
+
+        if len(unique_cast) > 100:
+            unique_cast = unique_cast[:100]
+
         optimized_results = []
-        for movie in response.get('cast', []):
-            
-            # set media_type for every movie
-            movie['media_type'] = 'movie'
-            
-            processed_movie = process_tmdb_result(movie)
-            if processed_movie:
-                optimized_results.append(processed_movie)
+        for media in unique_cast:
+            processed_media = process_tmdb_result(media)
+            if processed_media:
+                optimized_results.append(processed_media)
 
         return jsonify({
             "status": "success",

@@ -8,4 +8,5 @@ class AppConfig {
   static const String popularContentEndpoint = '/api/discover/popular';
   static const String latestContentEndpoint = '/api/discover/latest';
   static const String multiSearchEndpoint = '/api/search/multi';
+  static const String personEndpoint = '/api/person';
 }

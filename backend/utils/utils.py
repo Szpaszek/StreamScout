@@ -20,7 +20,6 @@ def process_tmdb_result(result):
         optimized_data["genre_ids"] = result.get('genre_ids', [])
 
     elif media_type == 'person': 
-        # TODO: raw response needs to be checked first
         # actor fields
         optimized_data["name"] = result.get('name', 'No Name')
         optimized_data["profile_path"] = f"{IMAGE_BASE_URL}{result.get('profile_path')}" if result.get('profile_path') else None
