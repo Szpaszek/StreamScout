@@ -83,7 +83,6 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
     }
   }
 
-  // TODO: add watch provider (seperate api), and more details (runtime etc.) using details api and similar (own api), thrailer (own api)
   @override
   Widget build(BuildContext context) {
     return PopScope(

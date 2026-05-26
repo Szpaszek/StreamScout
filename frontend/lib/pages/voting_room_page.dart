@@ -89,6 +89,38 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
       }
     });
 
+    _socket.on('room_expired', (data) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                data['msg'],
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    });
+
     _socket.on('error', (data) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -160,12 +192,6 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.tealAccent),
-            onPressed: () => _openAddMediaDialog(),
-          ),
-        ],
       ),
       body: _buildPhaseBody(),
     );
@@ -194,6 +220,10 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
+        IconButton(
+            icon: const Icon(Icons.add, color: Colors.tealAccent),
+            onPressed: () => _openAddMediaDialog(),
+          ),
         Expanded(
           child: _roomMedia.isEmpty
               ? const Center(child: Text("Waiting for movie suggestions..."))
@@ -314,7 +344,8 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
             Expanded(
               child: Mediacard(
                 media: item,
-                onTap: () => enableVoting? _castVote(item.id.toString()) : null,
+                onTap: () =>
+                    enableVoting ? _castVote(item.id.toString()) : null,
               ),
             ),
             const SizedBox(height: 8),

@@ -33,7 +33,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Stream Scout')),
+      appBar: AppBar(title: Text('Stream Scout', style: TextStyle(color: Theme.of(context).colorScheme.primary))),
 
       // Display the currently selected page
       body: Center(child: _pages.elementAt(_selectedIndex)),

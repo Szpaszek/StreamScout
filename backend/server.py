@@ -39,29 +39,9 @@ app.register_blueprint(person_bp, url_prefix='/api/person')
 # application configuration, shares global objects with blueprints
 app.config['tmdb_client'] = tmdb_client
 
-# APIs to use
-# Movies:
-# tmdb_client.TV().popular DONE
-# tmdb_client.Movies().upcoming()
-# tmdb_client.Movies().similar_movies 
-# tmdb_client.TV().similar
-
-# tmdb_client.Movies().latest
-# tmdb_client.Movies().recommendations ?
+# apis to use:
 # tmdb_client.Movies().watch_providers
-
-# tv shows
-# tmdb_client.TV().latest
-# tmdb_client.TV().recommendations ?
-# tmdb_client.TV().popular
-# tmdb_client.TV().similar ?
-# tmdb_client.TV().on_the_air ?
 # tmdb_client.TV().watch_providers
-
-# miscellaneous
-# tmdb_client.Discover() ? 
-# tmdb_client.Genres() ?
-# tmdb_client.Trending()
 
 if tmdb_client.API_KEY is None or TMDB_READ_ACCESS_TOKEN is None:
     raise ValueError("TMDB_API_KEY and TMDB_READ_ACCESS_TOKEN must be set in environment variables.")
@@ -285,6 +265,51 @@ def auto_close_voting(room_code):
             'winner': winner
         }, to=room_code)
 
+        # 60 seconds to look at the winner screen on Flutter
+        socketio.sleep(60)
+
+        # notify that the session is officially over
+        socketio.emit('room_expired', {
+            'msg': 'Voting session completed. Room closed!'
+        }, to=room_code)
+        
+        # clean up completely
+        socketio.close_room(room_code)
+        rooms_table.remove(Room.code == room_code)
+        print(f"Room {room_code} successfully closed and deleted.")
+
+def room_janitor():
+    """A single background task that runs forever, cleaning up old rooms."""
+    while True:
+        socketio.sleep(600)  # run every 10 minutes 600
+        print("Janitor: Starting database cleanup...")
+        
+        now = time.time()
+        # 2 hours = 7200 seconds
+        two_hours_ago = now - 7200
+
+        # find all rooms that are about to be deleted
+        expired_rooms = rooms_table.search(Room.created_at < two_hours_ago)
+
+        for room in expired_rooms:
+            room_code = room['code']
+
+            # BUG: for some reason deas not send a message
+            # alert the frontend users still in this socket room
+            socketio.emit('room_expired', {
+                'msg': 'This room has been closed due to inactivity.'
+            }, to=room_code)
+
+            socketio.sleep(60)
+
+            # forcefully close the room on the socket server side
+            socketio.close_room(room_code)
+        
+        # Remove rooms that are older than 2 hours
+        rooms_table.remove(Room.created_at < two_hours_ago)
+        print("Janitor: Cleanup complete.")
+
 
 if __name__ == '__main__':
+    socketio.start_background_task(target=room_janitor)
     socketio.run(app, debug=True)
