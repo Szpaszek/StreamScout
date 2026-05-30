@@ -312,4 +312,4 @@ def room_janitor():
 
 if __name__ == '__main__':
     socketio.start_background_task(target=room_janitor)
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=False)
