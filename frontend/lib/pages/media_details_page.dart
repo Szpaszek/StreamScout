@@ -24,19 +24,41 @@ class MediaDetailsPage extends StatefulWidget {
   State<MediaDetailsPage> createState() => _MediaDetailsPageState();
 }
 
+// defining clean alias for file readability
+typedef MediaPageData = ({
+  Map<String, dynamic> details,
+  List<dynamic> providers,
+  List<Media> similarContent,
+});
+
 class _MediaDetailsPageState extends State<MediaDetailsPage> {
-  late Future<Map<String, dynamic>> detailsFuture;
-  late Future<List<Media>> similarContent;
+  late Future<MediaPageData> _pageDataFuture;
 
   @override
   void initState() {
     super.initState();
 
-    detailsFuture = _fetchDetails();
-    similarContent = _fetchSimilarContent();
+    _pageDataFuture = _loadAllData();
   }
 
-  Future<Map<String, dynamic>> _fetchDetails() async {
+  Future<MediaPageData> _loadAllData() async {
+    final results = await Future.wait([
+      _fetchDetails(),
+      _fetchSimilarContent(),
+    ]);
+
+    final (details, providers) =
+        results[0] as (Map<String, dynamic>, List<dynamic>);
+    final similarContent = results[1] as List<Media>;
+
+    return (
+      details: details,
+      providers: providers,
+      similarContent: similarContent,
+    );
+  }
+
+  Future<(Map<String, dynamic>, List<dynamic>)> _fetchDetails() async {
     final uri = Uri.parse(
       '${AppConfig.apiBaseUrl}${AppConfig.mediaDetailsEndpoint}/${widget.media.mediaType}/${widget.media.id}',
     );
@@ -51,7 +73,9 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
             ? rawdata['movie']
             : rawdata['tv'];
 
-        return details;
+        final streaming_services = rawdata['streaming_services_de'];
+
+        return (details as Map<String, dynamic>, streaming_services as List<dynamic>);
       } else {
         throw Exception("Server error: ${response.statusCode}");
       }
@@ -99,180 +123,171 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, //left aligned
-              children: [
-                // Back button
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: TextButton.icon(
-                    onPressed: widget.onBack,
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                    label: Text(
-                      "Back",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
+          child: FutureBuilder<MediaPageData>(
+            future: _pageDataFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return Center(
+                  child: Text("Error loading page: ${snapshot.error}"),
+                );
+              }
 
-                // 2. Movie Poster
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(2, 0, 2, 5),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      widget.media.backdropPath ?? '',
-                      height: 220,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+              // Unpack it once at the top:
+              final data = snapshot.data!;
+              final details = data.details;
+              final providers = data.providers;
+              final similarMedia = data.similarContent;
 
-                      // fallback if image fails to load
-                      errorBuilder: (context, error, s) => SizedBox(
-                        height: 220,
-                        child: Center(
-                          child: const Icon(
-                            Icons.movie,
-                            color: Colors.grey,
-                            size: 50,
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, //left aligned
+                  children: [
+                    // Back button
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: TextButton.icon(
+                        onPressed: widget.onBack,
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        label: Text(
+                          "Back",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
 
-                // 3. title and info section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.media.title,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                    // 2. Movie Poster
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(2, 0, 2, 5),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          widget.media.backdropPath ?? '',
+                          height: 220,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
 
-                      // meta info row
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star_rounded,
-                            color: Theme.of(context).colorScheme.secondary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.media.rating.toStringAsFixed(1),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          // madia type tag
-                          _buildInfoTag(widget.media.mediaType.toUpperCase()),
-                          const SizedBox(width: 15),
-                          // FutureBuilder for the Runtime or number of seasons
-                          FutureBuilder<Map<String, dynamic>>(
-                            future: detailsFuture,
-                            builder: (context, snapshot) {
-                              // While loading, we show nothing or a tiny space
-                              if (snapshot.connectionState ==
-                                      ConnectionState.waiting ||
-                                  snapshot.hasError) {
-                                return const SizedBox.shrink();
-                              }
-
-                              final data = snapshot.data!;
-
-                              final isMovie = widget.media.mediaType == 'movie';
-                              // Movies use 'runtime', TV might not have a single value (can use first episode)
-                              final String runtime = isMovie
-                                  ? "${data['runtime'] ?? 0} min"
-                                  : "${data['number_of_seasons'] ?? 0} S • ${data['number_of_episodes'] ?? 0} Ep";
-
-                              return _buildInfoLine(
-                                Icons.timer_outlined,
-                                runtime,
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 15),
-                          Text(
-                            widget.media.releaseDate,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onTertiary,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          ValueListenableBuilder<List<Media>>(
-                            valueListenable: WatchlistService.watchlistNotifier,
-                            builder: (context, list, _) {
-                              final isSaved = WatchlistService.isBookmarked(
-                                widget.media.id,
-                              );
-
-                              return IconButton(
-                                onPressed: () =>
-                                    WatchlistService.toggleWatchlist(
-                                      widget.media,
-                                    ),
-                                icon: Icon(
-                                  isSaved
-                                      ? Icons.bookmark
-                                      : Icons.bookmark_add_outlined,
-                                  color: isSaved
-                                      ? Theme.of(context).colorScheme.secondary
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.onTertiary,
-                                  size: 28,
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-
-                      FutureBuilder<Map<String, dynamic>>(
-                        future: detailsFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Padding(
-                              padding: EdgeInsetsGeometry.symmetric(
-                                vertical: 20,
+                          // fallback if image fails to load
+                          errorBuilder: (context, error, s) => SizedBox(
+                            height: 220,
+                            child: Center(
+                              child: const Icon(
+                                Icons.movie,
+                                color: Colors.grey,
+                                size: 50,
                               ),
-                              child: LinearProgressIndicator(minHeight: 2),
-                            );
-                          }
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
 
-                          if (snapshot.hasError || !snapshot.hasData)
-                            return const SizedBox.shrink();
+                    // 3. title and info section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.media.title,
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
 
-                          final data = snapshot.data!;
-                          final isMovie = widget.media.mediaType == 'movie';
+                          // meta info row
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                color: Theme.of(context).colorScheme.secondary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.media.rating.toStringAsFixed(1),
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              // madia type tag
+                              _buildInfoTag(
+                                widget.media.mediaType.toUpperCase(),
+                              ),
+                              const SizedBox(width: 15),
 
-                          return Padding(
+                              _buildInfoLine(
+                                Icons.timer_outlined,
+                                widget.media.mediaType == 'movie'
+                                    ? "${details['runtime'] ?? 0} min"
+                                    : "${details['number_of_seasons'] ?? 0} S • ${details['number_of_episodes'] ?? 0} Ep",
+                              ),
+
+                              const SizedBox(width: 15),
+                              Text(
+                                widget.media.releaseDate,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onTertiary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              ValueListenableBuilder<List<Media>>(
+                                valueListenable:
+                                    WatchlistService.watchlistNotifier,
+                                builder: (context, list, _) {
+                                  final isSaved = WatchlistService.isBookmarked(
+                                    widget.media.id,
+                                  );
+
+                                  return IconButton(
+                                    onPressed: () =>
+                                        WatchlistService.toggleWatchlist(
+                                          widget.media,
+                                        ),
+                                    icon: Icon(
+                                      isSaved
+                                          ? Icons.bookmark
+                                          : Icons.bookmark_add_outlined,
+                                      color: isSaved
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.secondary
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onTertiary,
+                                      size: 28,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+
+                          Padding(
                             padding: const EdgeInsets.only(top: 0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Genres Display
                                 Text(
-                                  (data['genres'] as List)
+                                  (details['genres'] as List)
                                       .map((g) => g['name'])
                                       .join(' • '),
                                   style: TextStyle(
@@ -284,100 +299,79 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-                                if (!isMovie) ...[
+                                if (widget.media.mediaType != 'movie') ...[
                                   const SizedBox(height: 5),
                                   _buildInfoLine(
                                     Icons.info_outline,
-                                    "Status: ${data['status']}",
+                                    "Status: ${details['status']}",
                                   ),
                                 ],
                               ],
                             ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      if (widget.roomCode != null) ...[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.tealAccent,
-                              foregroundColor: Colors.black,
-                              minimumSize: const Size(double.infinity, 50),
-                            ),
-                            icon: const Icon(Icons.add_to_photos),
-                            label: const Text("Suggest for Voting"),
-                            onPressed: () => _suggestMovie(context),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
 
-                      // 4. overview
-                      Text(
-                        "Overview",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        widget.media.overview,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.onTertiary,
-                          height: 1.6, // adds breathing room between lines
-                        ),
-                      ),
+                          const SizedBox(height: 20),
 
-                      const SizedBox(height: 20),
+                          if (widget.roomCode != null) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.tealAccent,
+                                  foregroundColor: Colors.black,
+                                  minimumSize: const Size(double.infinity, 50),
+                                ),
+                                icon: const Icon(Icons.add_to_photos),
+                                label: const Text("Suggest for Voting"),
+                                onPressed: () => _suggestMovie(context),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
 
-                      Text(
-                        "Similar",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
+                          // 4. overview
+                          Text(
+                            "Overview",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            widget.media.overview,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.onTertiary,
+                              height: 1.6, // adds breathing room between lines
+                            ),
+                          ),
 
-                      const SizedBox(height: 10),
+                          const SizedBox(height: 20),
 
-                      FutureBuilder<List<Media>>(
-                        future: similarContent,
-                        builder: (context, snapshot) {
-                          // show a loader while waiting
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const SizedBox(
-                              height: 300, // Match your Row height
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
+                          Text(
+                            "Similar",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
 
-                          // handle errors or empty results
-                          if (snapshot.hasError ||
-                              !snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return const SizedBox.shrink(); // hide the section if nothing found
-                          }
+                          const SizedBox(height: 10),
 
                           // data has arrived, pass the real List<Media>
-                          return HorizontalMediaCardRow(
-                            mediaList: snapshot.data!,
-                          );
-                        },
+                          HorizontalMediaCardRow(mediaList: similarMedia),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -417,9 +411,9 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
     SocketService().addMedia(widget.roomCode!, widget.media);
 
     // Feedback to user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Suggested ${widget.media.title}!")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Suggested ${widget.media.title}!")));
 
     // Pop back to the Voting Room
     // Pop twice: once from Details, once from Search

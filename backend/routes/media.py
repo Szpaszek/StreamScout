@@ -88,22 +88,31 @@ def get_upcomming_movies():
 def get_media_details(media_type, media_id):
 
     tmdb_client = current_app.config['tmdb_client']
-
     try:
         if (media_type == 'movie'):
             movie = tmdb_client.Movies(media_id)
             response = movie.info()
 
+            movie.watch_providers()
+            watch_provider = movie.results or {}
+            stream_provider = watch_provider.get('DE', {})
+            streaming_service = stream_provider.get('flatrate', {})
+
         elif (media_type == 'tv'):
             tv = tmdb_client.TV(media_id)
             response = tv.info()
 
+            tv.watch_providers()
+            watch_provider = tv.results or {}
+            stream_provider = watch_provider.get('DE', {})
+            streaming_service = stream_provider.get('flatrate', {})
         else:
             raise Exception('Invalid media typ')
 
         return jsonify({
             "status": "success",
             media_type: response,
+            "streaming_services_de": streaming_service
         }), 200
 
     # cathing any request exceptions from tmdbsimple
