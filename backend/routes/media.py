@@ -105,7 +105,7 @@ def get_media_details(media_type, media_id):
             tv.watch_providers()
             watch_provider = tv.results or {}
             stream_provider = watch_provider.get('DE', {})
-            streaming_service = stream_provider.get('flatrate', {})
+            streaming_service = stream_provider.get('flatrate', [])
         else:
             raise Exception('Invalid media typ')
 

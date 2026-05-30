@@ -1,11 +1,11 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/app_config.dart';
 import 'package:frontend/models/media.dart';
 import 'package:frontend/services/socket_service.dart';
 import 'package:frontend/services/watchlist_service.dart';
 import 'package:frontend/widgets/horizontal_media_card_row.dart';
+import 'package:frontend/widgets/streaming_providers_row.dart';
 import 'package:http/http.dart' as http;
 
 class MediaDetailsPage extends StatefulWidget {
@@ -69,13 +69,17 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
       if (response.statusCode == 200) {
         final rawdata = jsonDecode(response.body);
 
-        final details = widget.media.mediaType == 'movie'
+        final Map<String, dynamic> details = widget.media.mediaType == 'movie'
             ? rawdata['movie']
             : rawdata['tv'];
 
-        final streaming_services = rawdata['streaming_services_de'];
+        final rawProviders = rawdata['streaming_services_de'];
 
-        return (details as Map<String, dynamic>, streaming_services as List<dynamic>);
+        final List<dynamic> streaming_services = (rawProviders is List)
+            ? rawProviders
+            : [];
+
+        return (details, streaming_services);
       } else {
         throw Exception("Server error: ${response.statusCode}");
       }
@@ -305,7 +309,9 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                     Icons.info_outline,
                                     "Status: ${details['status']}",
                                   ),
+                                  const SizedBox(height: 10),
                                 ],
+                                StreamingProvidersRow(providers: providers),
                               ],
                             ),
                           ),
