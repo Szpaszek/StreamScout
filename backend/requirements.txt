@@ -4,3 +4,4 @@ dotenv
 tmdbsimple
 flask-socketio
 tinydb
+gevent

@@ -56,7 +56,7 @@ Room = Query()
 def is_expired(created_at):
     return (time.time() - created_at) > 3600
 
-socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app, cors_allowed_origins='*', path="voting_room/socket.io")
 
 
 

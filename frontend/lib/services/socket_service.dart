@@ -13,6 +13,7 @@ class SocketService {
     socket = IO.io(AppConfig.apiBaseUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': true,
+      'path': '/voting_room/socket.io/'
     });
 
     socket.onConnect((_) => print('Connected to Socket Server'));
