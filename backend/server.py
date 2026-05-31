@@ -48,7 +48,7 @@ if tmdb_client.API_KEY is None or TMDB_READ_ACCESS_TOKEN is None:
 
 
 # TinyDB
-db = TinyDB('backend/db.json')
+db = TinyDB('db.json')
 rooms_table = db.table('rooms')
 Room = Query()
 
