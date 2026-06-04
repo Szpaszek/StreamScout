@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$apiEndpoint');
 
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         // Decode the JSON response to a Dart object

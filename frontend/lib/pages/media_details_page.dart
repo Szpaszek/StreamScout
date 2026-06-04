@@ -64,7 +64,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
     );
 
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final rawdata = jsonDecode(response.body);
@@ -94,7 +94,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
     );
 
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final rawdata = jsonDecode(response.body);
@@ -227,12 +227,12 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 15),
+                              const SizedBox(width: 10),
                               // madia type tag
                               _buildInfoTag(
                                 widget.media.mediaType.toUpperCase(),
                               ),
-                              const SizedBox(width: 15),
+                              const SizedBox(width: 10),
 
                               _buildInfoLine(
                                 Icons.timer_outlined,
@@ -241,7 +241,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                     : "${details['number_of_seasons'] ?? 0} S • ${details['number_of_episodes'] ?? 0} Ep",
                               ),
 
-                              const SizedBox(width: 15),
+                              const SizedBox(width: 10),
                               Text(
                                 widget.media.releaseDate,
                                 style: TextStyle(
@@ -251,7 +251,6 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                                   fontSize: 14,
                                 ),
                               ),
-                              const SizedBox(width: 10),
                               ValueListenableBuilder<List<Media>>(
                                 valueListenable:
                                     WatchlistService.watchlistNotifier,
@@ -346,6 +345,7 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                               color: Theme.of(context).colorScheme.secondary,
                             ),
                           ),
+
                           const SizedBox(height: 10),
                           Text(
                             widget.media.overview,
@@ -357,13 +357,14 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
                           ),
 
                           const SizedBox(height: 20),
-
-                          Text(
-                            "Similar",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.secondary,
+                          Center(
+                            child: Text(
+                              "Similar",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
                             ),
                           ),
 

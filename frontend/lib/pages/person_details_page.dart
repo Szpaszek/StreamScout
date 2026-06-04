@@ -45,7 +45,7 @@ class _PersonDetailsPage extends State<PersonDetailsPage> {
     );
 
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final rawdata = jsonDecode(response.body);
@@ -65,7 +65,7 @@ class _PersonDetailsPage extends State<PersonDetailsPage> {
     );
 
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final rawdata = jsonDecode(response.body);
