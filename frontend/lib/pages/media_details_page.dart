@@ -111,6 +111,14 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
     }
   }
 
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _pageDataFuture = _loadAllData();
+    });
+
+    await _pageDataFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -145,237 +153,251 @@ class _MediaDetailsPageState extends State<MediaDetailsPage> {
               final providers = data.providers;
               final similarMedia = data.similarContent;
 
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, //left aligned
-                  children: [
-                    // Back button
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: TextButton.icon(
-                        onPressed: widget.onBack,
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        label: Text(
-                          "Back",
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
+              return RefreshIndicator(
+                color: const Color(0xFF4EEAD7),
+                onRefresh: _handleRefresh,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, //left aligned
+                    children: [
+                      // Back button
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: TextButton.icon(
+                          onPressed: widget.onBack,
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
-                        ),
-                      ),
-                    ),
-
-                    // 2. Movie Poster
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(2, 0, 2, 5),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          widget.media.backdropPath ?? '',
-                          height: 220,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-
-                          // fallback if image fails to load
-                          errorBuilder: (context, error, s) => SizedBox(
-                            height: 220,
-                            child: Center(
-                              child: const Icon(
-                                Icons.movie,
-                                color: Colors.grey,
-                                size: 50,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // 3. title and info section
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.media.title,
+                          label: Text(
+                            "Back",
                             style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                        ),
+                      ),
 
-                          // meta info row
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                color: Theme.of(context).colorScheme.secondary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                widget.media.rating.toStringAsFixed(1),
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                  fontWeight: FontWeight.bold,
+                      // 2. Movie Poster
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(2, 0, 2, 5),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            widget.media.backdropPath ?? '',
+                            height: 220,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+
+                            // fallback if image fails to load
+                            errorBuilder: (context, error, s) => SizedBox(
+                              height: 220,
+                              child: Center(
+                                child: const Icon(
+                                  Icons.movie,
+                                  color: Colors.grey,
+                                  size: 50,
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              // madia type tag
-                              _buildInfoTag(
-                                widget.media.mediaType.toUpperCase(),
-                              ),
-                              const SizedBox(width: 10),
-
-                              _buildInfoLine(
-                                Icons.timer_outlined,
-                                widget.media.mediaType == 'movie'
-                                    ? "${details['runtime'] ?? 0} min"
-                                    : "${details['number_of_seasons'] ?? 0} S • ${details['number_of_episodes'] ?? 0} Ep",
-                              ),
-
-                              const SizedBox(width: 10),
-                              Text(
-                                widget.media.releaseDate,
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onTertiary,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              ValueListenableBuilder<List<Media>>(
-                                valueListenable:
-                                    WatchlistService.watchlistNotifier,
-                                builder: (context, list, _) {
-                                  final isSaved = WatchlistService.isBookmarked(
-                                    widget.media.id,
-                                  );
-
-                                  return IconButton(
-                                    onPressed: () =>
-                                        WatchlistService.toggleWatchlist(
-                                          widget.media,
-                                        ),
-                                    icon: Icon(
-                                      isSaved
-                                          ? Icons.bookmark
-                                          : Icons.bookmark_add_outlined,
-                                      color: isSaved
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.secondary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onTertiary,
-                                      size: 28,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                            ),
                           ),
+                        ),
+                      ),
 
-                          Padding(
-                            padding: const EdgeInsets.only(top: 0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      // 3. title and info section
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.media.title,
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // meta info row
+                            Row(
                               children: [
-                                // Genres Display
+                                Icon(
+                                  Icons.star_rounded,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 4),
                                 Text(
-                                  (details['genres'] as List)
-                                      .map((g) => g['name'])
-                                      .join(' • '),
+                                  widget.media.rating.toStringAsFixed(1),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                // madia type tag
+                                _buildInfoTag(
+                                  widget.media.mediaType.toUpperCase(),
+                                ),
+                                const SizedBox(width: 10),
+
+                                _buildInfoLine(
+                                  Icons.timer_outlined,
+                                  widget.media.mediaType == 'movie'
+                                      ? "${details['runtime'] ?? 0} min"
+                                      : "${details['number_of_seasons'] ?? 0} S • ${details['number_of_episodes'] ?? 0} Ep",
+                                ),
+
+                                const SizedBox(width: 10),
+                                Text(
+                                  widget.media.releaseDate,
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.onTertiary,
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(height: 10),
-                                if (widget.media.mediaType != 'movie') ...[
-                                  const SizedBox(height: 5),
-                                  _buildInfoLine(
-                                    Icons.info_outline,
-                                    "Status: ${details['status']}",
-                                  ),
-                                  const SizedBox(height: 10),
-                                ],
-                                StreamingProvidersRow(providers: providers),
+                                ValueListenableBuilder<List<Media>>(
+                                  valueListenable:
+                                      WatchlistService.watchlistNotifier,
+                                  builder: (context, list, _) {
+                                    final isSaved =
+                                        WatchlistService.isBookmarked(
+                                          widget.media.id,
+                                        );
+
+                                    return IconButton(
+                                      onPressed: () =>
+                                          WatchlistService.toggleWatchlist(
+                                            widget.media,
+                                          ),
+                                      icon: Icon(
+                                        isSaved
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_add_outlined,
+                                        color: isSaved
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.secondary
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onTertiary,
+                                        size: 28,
+                                      ),
+                                    );
+                                  },
+                                ),
                               ],
                             ),
-                          ),
 
-                          const SizedBox(height: 20),
-
-                          if (widget.roomCode != null) ...[
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.tealAccent,
-                                  foregroundColor: Colors.black,
-                                  minimumSize: const Size(double.infinity, 50),
-                                ),
-                                icon: const Icon(Icons.add_to_photos),
-                                label: const Text("Suggest for Voting"),
-                                onPressed: () => _suggestMovie(context),
+                              padding: const EdgeInsets.only(top: 0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Genres Display
+                                  Text(
+                                    (details['genres'] as List)
+                                        .map((g) => g['name'])
+                                        .join(' • '),
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onTertiary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  if (widget.media.mediaType != 'movie') ...[
+                                    const SizedBox(height: 5),
+                                    _buildInfoLine(
+                                      Icons.info_outline,
+                                      "Status: ${details['status']}",
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  StreamingProvidersRow(providers: providers),
+                                ],
                               ),
                             ),
+
                             const SizedBox(height: 20),
-                          ],
 
-                          // 4. overview
-                          Text(
-                            "Overview",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          ),
+                            if (widget.roomCode != null) ...[
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.tealAccent,
+                                    foregroundColor: Colors.black,
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      50,
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.add_to_photos),
+                                  label: const Text("Suggest for Voting"),
+                                  onPressed: () => _suggestMovie(context),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
 
-                          const SizedBox(height: 10),
-                          Text(
-                            widget.media.overview,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Theme.of(context).colorScheme.onTertiary,
-                              height: 1.6, // adds breathing room between lines
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-                          Center(
-                            child: Text(
-                              "Similar",
+                            // 4. overview
+                            Text(
+                              "Overview",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).colorScheme.secondary,
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 10),
+                            const SizedBox(height: 10),
+                            Text(
+                              widget.media.overview,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Theme.of(context).colorScheme.onTertiary,
+                                height:
+                                    1.6, // adds breathing room between lines
+                              ),
+                            ),
 
-                          // data has arrived, pass the real List<Media>
-                          HorizontalMediaCardRow(mediaList: similarMedia),
-                        ],
+                            const SizedBox(height: 20),
+                            Center(
+                              child: Text(
+                                "Similar",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // data has arrived, pass the real List<Media>
+                            HorizontalMediaCardRow(mediaList: similarMedia),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
