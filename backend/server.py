@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room
+import redis
 import tmdbsimple as tmdb
 import os
 from dotenv import load_dotenv # Load environment variables from .env file
@@ -58,7 +59,18 @@ def is_expired(created_at):
 
 socketio = SocketIO(app, cors_allowed_origins='*', path="voting_room/socket.io")
 
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST', 'localhost'),
+    port=int(os.getenv('REDIS_PORT', 6379)),
+    db=0,
+    decode_responses=True # Automatically converts bytes to Python strings
+)
 
+@app.route('/test/')
+def index():
+    # Example: Incrementing a simple page hit counter
+    hits = redis_client.incr('page_hits')
+    return f"This page has been viewed {hits} times!"
 
 @socketio.on('create_room')
 def handle_create(data):

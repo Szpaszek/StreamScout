@@ -5,3 +5,4 @@ tmdbsimple
 flask-socketio
 tinydb
 gevent
+redis
