@@ -1,10 +1,10 @@
+import json
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room
 import redis
 import tmdbsimple as tmdb
 import os
 from dotenv import load_dotenv # Load environment variables from .env file
-from tinydb import TinyDB, Query, where
 import time
 from routes.media import media_bp
 from routes.search import search_bp
@@ -48,23 +48,28 @@ if tmdb_client.API_KEY is None or TMDB_READ_ACCESS_TOKEN is None:
     raise ValueError("TMDB_API_KEY and TMDB_READ_ACCESS_TOKEN must be set in environment variables.")
 
 
-# TinyDB
-db = TinyDB('db.json')
-rooms_table = db.table('rooms')
-Room = Query()
-
 # 1 hour experation
 def is_expired(created_at):
-    return (time.time() - created_at) > 3600
+    return (time.time() - float(created_at)) > 3600
 
-socketio = SocketIO(app, cors_allowed_origins='*', path="voting_room/socket.io")
-
+# connect to redis
 redis_client = redis.Redis(
     host=os.getenv('REDIS_HOST', 'localhost'),
     port=int(os.getenv('REDIS_PORT', 6379)),
     db=0,
     decode_responses=True # Automatically converts bytes to Python strings
 )
+# Using Redis as a message queue allows multiple Gunicorn workers to sync perfectly!
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins='*', 
+    path="voting_room/socket.io",
+    message_queue=f"redis://{os.getenv('REDIS_HOST', 'localhost')}:6379/0"
+)
+
+# Helper function to generate standardized Redis keys
+def get_room_key(room_code):
+    return f"room:{room_code}"
 
 @app.route('/test/')
 def index():
@@ -76,20 +81,30 @@ def index():
 def handle_create(data):
     room_code = data['code']
     user_id = request.sid # type: ignore # The host's connection ID 
+    room_key = get_room_key(room_code)
+
+    if redis_client.exists(room_key):
+        emit('error', {'msg': 'Room already exists!'}, room=user_id)
+        return
     
-    # create room structure
-    rooms_table.insert({
+# Create room mapping using Redis Hashes. Complex types are JSON stringified.
+    room_data = {
         'code': room_code,
         'status': 'suggesting',
         'host_sid': user_id,
-        'submissions': {}, # media_id + vote_count
-        'voted_users': [],
-        'users': [user_id],
+        'submissions': json.dumps({}), 
+        'voted_users': json.dumps([]),
+        'users': json.dumps([user_id]),
         'created_at': time.time(),
-        'timer_end': None
-        })
+        'timer_end': '' # Redis fields are string-based; use empty string for None
+    }
+
+    redis_client.hset(room_key, mapping=room_data)
+    # Set a 24-hour safety TTL on the Redis key so dead rooms automatically vanish
+    redis_client.expire(room_key, 3600)
+
     join_room(room_code)
-    print(f"Room {room_code} created.")
+    print(f"Room {room_code} created in Redis.")
 
     # Let the host know they are successfully hosting
     emit('room_state', {
@@ -98,53 +113,58 @@ def handle_create(data):
         'user_count': 1,
         'media_list': [],
         'votes': {}
-    }, room=user_id) # type: ignore
+    }, room=user_id) 
 
 @socketio.on('join_room')
 def handle_join(data):
     room_code = data['room']
     user_id = request.sid # type: ignore
+    room_key = get_room_key(room_code)
 
-    room = rooms_table.get(Room.code == room_code)
+    room = redis_client.hgetall(room_key)
     if not room:
         emit('error', {'msg': 'Room not found!'})
         return
     
     join_room(room_code)
-    print(f"User {request.sid} joined {room_code}") # type: ignore
+    print(f"User {user_id} joined {room_code}") 
 
     # Update user list if they aren't already in it
-    current_users = room.get('users', []) # type: ignore
+    current_users = json.loads(room['users'])
+
     if user_id not in current_users:
         current_users.append(user_id)
-        rooms_table.update({'users': current_users}, Room.code == room_code)
+        redis_client.hset(room_key, 'users', json.dumps(current_users))
 
     emit('user_count_update', {'count': len(current_users)}, to=room_code)
 
     # room data
-    submissions = room.get('submissions', {}) # type: ignore
+    submissions = json.loads(room['submissions']) 
     current_media = [wrapper['data'] for wrapper in submissions.values()]
     current_votes = {mid: wrapper.get('votes', 0) for mid, wrapper in submissions.items()}
 
+    timer_end = room.get('timer_end')
+
 # Send current state explicitly to this joining user
     emit('room_state', {
-        'status': room['status'], # type: ignore
-        'is_host': (room['host_sid'] == user_id), # type: ignore
-        'user_count': len(current_users),
-        'media_list': current_media,
-        'votes': current_votes,
-        'timer_end': room.get('timer_end') # Pass the end timestamp if voting already started # type: ignore
-    }, room=user_id) # type: ignore
+            'status': room['status'], 
+            'is_host': (room['host_sid'] == user_id), 
+            'user_count': len(current_users),
+            'media_list': current_media,
+            'votes': current_votes,
+            'timer_end': float(timer_end) if timer_end else None 
+        }, room=user_id)
 
 @socketio.on('add_media')
 def handle_add_media(data):
     room_code = data['room']
     media_data = data['media'] # The full movie object from Flutter
     user_id = request.sid      # Unique ID for this connection # type: ignore
+    room_key = get_room_key(room_code)
     
-    room = rooms_table.get(Room.code == room_code)
+    room = redis_client.hgetall(room_key)
     
-    if not room or is_expired(room['created_at']): # type: ignore
+    if not room or is_expired(room['created_at']): 
         emit('error', {'msg': 'Room expired or not found'})
         return
     
@@ -153,11 +173,11 @@ def handle_add_media(data):
         emit('error', {'msg': 'Submissions are closed! The room is already voting.'}, room=user_id) # type: ignore
         return
 
-    submissions = room.get('submissions', {}) # type: ignore
+    submissions = json.loads(room['submissions'])
     
     already_added = any(s['added_by'] == user_id for s in submissions.values())
     if already_added:
-        emit('error', {'msg': 'You can only suggest 1 movie!'}, room=user_id) # type: ignore
+        emit('error', {'msg': 'You can only suggest 1 movie!'}, room=user_id) 
         return
 
     # Add the new media
@@ -168,7 +188,7 @@ def handle_add_media(data):
         'votes': 0
     }
     
-    rooms_table.update({'submissions': submissions}, Room.code == room_code)
+    redis_client.hset(room_key, 'submissions', json.dumps(submissions))
     
     # Tell everyone in the room a new movie is up for voting
     emit('media_added', media_data, to=room_code)
@@ -179,22 +199,23 @@ def handle_add_media(data):
 def handle_start_voting(data):
     room_code = data['room']
     user_id = request.sid # type: ignore
+    room_key = get_room_key(room_code)
 
-    room = rooms_table.get(Room.code == room_code)
-    if not room or room['host_sid'] != user_id: # type: ignore
-        emit('error', {'msg': 'Unauthorized: Only the host can start voting.'}, room=user_id) # type: ignore
+    room = redis_client.hgetall(room_key)
+    if not room or room['host_sid'] != user_id:
+        emit('error', {'msg': 'Unauthorized: Only the host can start voting.'}, room=user_id)
         return
 
-    if room['status'] != 'suggesting': # type: ignore
+    if room['status'] != 'suggesting': 
         return
 
     # Calculate exactly when 5 minutes from now is 
     timer_end_timestamp = time.time() + 30 # normally 300 seconds
 
-    rooms_table.update({
+    redis_client.hset(room_key, mapping={
         'status': 'voting',
         'timer_end': timer_end_timestamp
-    }, Room.code == room_code)
+    })
 
     # Notify everyone that the phase has shifted and pass the countdown end
     emit('phase_changed', {
@@ -210,23 +231,24 @@ def handle_vote(data):
     room_code = data['room']
     media_id = str(data['media_id'])
     user_id = request.sid # This is the unique ID for the current connection # type: ignore
+    room_key = get_room_key(room_code)
     
-    room = rooms_table.get(Room.code == room_code)
-    if not room or is_expired(room['created_at']): # type: ignore
+    room = redis_client.hgetall(room_key)
+    if not room or is_expired(room['created_at']): 
         emit('error', {'msg': 'Room expired or not found'})
         return
 
-    current_status = room.get('status') # type: ignore
+    current_status = room.get('status') 
     if current_status == 'suggesting':
-        emit('error', {'msg': 'Voting has not started yet! Waiting for the host.'}, room=user_id) # type: ignore
+        emit('error', {'msg': 'Voting has not started yet! Waiting for the host.'}, room=user_id) 
         return
     elif current_status == 'results':
-        emit('error', {'msg': 'Voting has already ended!'}, room=user_id) # type: ignore
+        emit('error', {'msg': 'Voting has already ended!'}, room=user_id) 
         return
     
     # Get the lists from the DB
-    submissions = room.get('submissions', {}) # type: ignore
-    voted_users = room.get('voted_users', []) # List of SIDs who have voted # type: ignore
+    submissions = json.loads(room['submissions'])
+    voted_users = json.loads(room['voted_users'])# List of SIDs who have voted 
 
     if user_id in voted_users:
             emit('error', {'msg': 'You have already cast your vote!'}, room=user_id)  # type: ignore
@@ -244,11 +266,10 @@ def handle_vote(data):
         # Add this user to the "voted_users" list
         voted_users.append(user_id)
         
-        # Update TinyDB
-        rooms_table.update({
-            'submissions': submissions,
-            'voted_users': voted_users
-        }, Room.code == room_code)
+        redis_client.hset(room_key, mapping={
+            'submissions': json.dumps(submissions),
+            'voted_users': json.dumps(voted_users)
+        })
         
         # Tell everyone the new score
         emit('update_votes', {
@@ -260,13 +281,14 @@ def handle_vote(data):
 def auto_close_voting(room_code):
     # Sleep for 5 minutes
     socketio.sleep(30) # 30 seconds in debug
+    room_key = get_room_key(room_code)
     
-    room = rooms_table.get(Room.code == room_code)
-    if room and room['status'] == 'voting': # type: ignore
-        rooms_table.update({'status': 'results'}, Room.code == room_code)
+    room = redis_client.hgetall(room_key)
+    if room and room['status'] == 'voting': 
+        redis_client.hset(room_key, 'status', 'results')
         
         # Determine winner
-        submissions = room.get('submissions', {}) # type: ignore
+        submissions = json.loads(room['submissions'])
         if submissions:
             winner = max(submissions.values(), key=lambda x: x['votes'])['data']
         else:
@@ -287,41 +309,10 @@ def auto_close_voting(room_code):
         
         # clean up completely
         socketio.close_room(room_code)
-        rooms_table.remove(Room.code == room_code)
-        print(f"Room {room_code} successfully closed and deleted.")
+        redis_client.delete(room_key)
+        print(f"Room {room_code} successfully closed and and deleted from Redis.")
 
-def room_janitor():
-    """A single background task that runs forever, cleaning up old rooms."""
-    while True:
-        socketio.sleep(600)  # run every 10 minutes 600
-        print("Janitor: Starting database cleanup...")
-        
-        now = time.time()
-        # 2 hours = 7200 seconds
-        two_hours_ago = now - 7200
-
-        # find all rooms that are about to be deleted
-        expired_rooms = rooms_table.search(Room.created_at < two_hours_ago)
-
-        for room in expired_rooms:
-            room_code = room['code']
-
-            # BUG: for some reason deas not send a message
-            # alert the frontend users still in this socket room
-            socketio.emit('room_expired', {
-                'msg': 'This room has been closed due to inactivity.'
-            }, to=room_code)
-
-            socketio.sleep(60)
-
-            # forcefully close the room on the socket server side
-            socketio.close_room(room_code)
-        
-        # Remove rooms that are older than 2 hours
-        rooms_table.remove(Room.created_at < two_hours_ago)
-        print("Janitor: Cleanup complete.")
 
 
 if __name__ == '__main__':
-    socketio.start_background_task(target=room_janitor)
     socketio.run(app, debug=False)

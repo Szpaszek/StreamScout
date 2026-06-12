@@ -3,6 +3,5 @@ requests
 dotenv 
 tmdbsimple
 flask-socketio
-tinydb
 gevent
 redis
