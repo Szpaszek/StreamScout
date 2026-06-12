@@ -67,6 +67,13 @@ class _VotingRoomScreenState extends State<VotingRoomPage> {
           _roomStatus = data['status'] ?? 'suggesting';
           _isHost = data['is_host'] ?? false;
           _userCount = data['user_count'] ?? 1;
+          List<dynamic> rawMediaList = data['media_list'] ?? [];
+          List<Media> items = [];
+
+          for (var rawMedia in rawMediaList) {
+            items.add(Media.fromJson(rawMedia as Map<String, dynamic>));
+          }
+          _roomMedia = items;
         });
         if (_roomStatus == 'voting' && data['timer_end'] != null) {
           _startLocalTimer(data['timer_end']);
