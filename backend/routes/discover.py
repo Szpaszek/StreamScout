@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
+from backend.utils.security import require_app_token
 from utils.utils import process_tmdb_result
 
 # define the blueprint
 discover_bp = Blueprint('discover', __name__)
 
 @discover_bp.route('/popular', methods=['GET'])
+@require_app_token
 def get_popular_combined():
     """
     Fetches a combined list of popular movies and TV shows using the TMDB Trending API.
@@ -53,6 +55,7 @@ def get_popular_combined():
     
 
 @discover_bp.route('latest', methods=['GET'])
+@require_app_token
 def get_latest_releases():
     """
     Fetches the latest released movies and TV shows (within the last 30 days).

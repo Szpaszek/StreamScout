@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
+from backend.utils.security import require_app_token
 from utils.utils import process_tmdb_result
 
 # define the blueprint
 search_bp = Blueprint('search', __name__)
 
 @search_bp.route('/multi/<searchQuery>')
+@require_app_token
 def get_search_results(searchQuery):
 
     # access global variables

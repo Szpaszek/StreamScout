@@ -9,4 +9,13 @@ class AppConfig {
   static const String latestContentEndpoint = '/api/discover/latest';
   static const String multiSearchEndpoint = '/api/search/multi';
   static const String personEndpoint = '/api/person';
+
+  static const String appToken = "";
+
+    static Map<String, String> getRequestHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-StreamScout-Token': appToken,
+    };
+  }
 }

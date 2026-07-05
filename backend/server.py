@@ -16,6 +16,7 @@ load_dotenv()
 # get TMDB API key and read access token from environment variables
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 TMDB_READ_ACCESS_TOKEN = os.getenv("TMDB_READ_ACCESS_TOKEN")
+APP_TOKEN = os.getenv("APP_TOKEN")
 
 # Base URL for images from TMDB with width 500px for mobile optimization
 IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
@@ -76,6 +77,19 @@ def index():
     # Example: Incrementing a simple page hit counter
     hits = redis_client.incr('page_hits')
     return f"This page has been viewed {hits} times!"
+
+@socketio.on('connect')
+def handle_connect():
+    # check quesry parameter during handshake
+    token = request.headers.get('X-StreamScout-Token')
+
+    # fallback
+    if not token:
+        token = request.args.get('token')
+
+    if token != APP_TOKEN:
+        print("Invalid token, Websocket connection was denied.")
+        return False
 
 @socketio.on('create_room')
 def handle_create(data):

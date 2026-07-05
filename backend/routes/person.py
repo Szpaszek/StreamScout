@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
+from backend.utils.security import require_app_token
 from utils.utils import process_tmdb_result
 
 # define the blueprint
 person_bp = Blueprint('person', __name__)
 
 @person_bp.route('/details/<int:person_id>', methods=['GET'])
+@require_app_token
 def get_person_details(person_id):
             # access global variable
     tmdb_client = current_app.config['tmdb_client']
@@ -32,6 +34,7 @@ def get_person_details(person_id):
         return jsonify({"status": "error", "message": "An unexpected error occurred"}), 500
 
 @person_bp.route('/credits/<int:person_id>', methods=['GET'])
+@require_app_token
 def get_person_credits(person_id):
 
         # access global variable

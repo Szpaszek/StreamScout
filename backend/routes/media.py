@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
+from backend.utils.security import require_app_token
 from utils.utils import process_tmdb_result
 
 # define the blueprint
 media_bp = Blueprint('media', __name__)
 
 @media_bp.route('/popular', methods=['GET'])
+@require_app_token
 def get_popular_movies():
 
     # access global variable
@@ -45,6 +47,7 @@ def get_popular_movies():
         return jsonify({"status": "error", "message": "An unexpected error occurred"}), 500
     
 @media_bp.route('/upcoming', methods=['GET'])
+@require_app_token
 def get_upcomming_movies():
 
     # access global variable
@@ -85,6 +88,7 @@ def get_upcomming_movies():
     
 
 @media_bp.route('/<string:media_type>/<int:media_id>', methods=['GET'])
+@require_app_token
 def get_media_details(media_type, media_id):
 
     tmdb_client = current_app.config['tmdb_client']
@@ -127,6 +131,7 @@ def get_media_details(media_type, media_id):
     
 
 @media_bp.route('/<string:media_type>/<int:media_id>/similar', methods=['GET'])
+@require_app_token
 def get_similar_media(media_type, media_id):
 
     tmdb_client = current_app.config['tmdb_client']

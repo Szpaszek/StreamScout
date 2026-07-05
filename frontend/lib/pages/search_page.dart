@@ -49,7 +49,7 @@ class _SearchPageState extends State<SearchPage> {
     );
 
     try {
-      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+      final response = await http.get(uri, headers: AppConfig.getRequestHeaders()).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
