@@ -14,8 +14,8 @@ class SocketService {
       'transports': ['websocket'],
       'autoConnect': true,
       'path': '/voting_room/socket.io/',
-      'extraHeaders': {
-    'X-StreamScout-Token': AppConfig.appToken
+      'query': {
+    'token': AppConfig.appToken
   }
     });
 
