@@ -1,6 +1,9 @@
 from functools import wraps
 import os 
 from flask import abort, request
+from dotenv import load_dotenv
+
+load_dotenv()
 
 APP_TOKEN = os.getenv("APP_TOKEN")
 

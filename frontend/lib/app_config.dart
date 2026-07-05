@@ -1,6 +1,9 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConfig {
-  // IMPORTANT: Change this if running on an Android Emulator (use 'http://10.0.2.2:5000')
+  // local server
   //static const String apiBaseUrl = 'http://10.0.2.2:5000';
+  // online server
   static const String apiBaseUrl = 'http://194.117.224.17';
   static const String popularMoviesEndpoint = '/api/media/popular';
   static const String mediaDetailsEndpoint = '/api/media';
@@ -10,7 +13,7 @@ class AppConfig {
   static const String multiSearchEndpoint = '/api/search/multi';
   static const String personEndpoint = '/api/person';
 
-  static const String appToken = "";
+  static final String appToken = dotenv.env['APP_TOKEN'] ?? 'App token not found.';
 
     static Map<String, String> getRequestHeaders() {
     return {
