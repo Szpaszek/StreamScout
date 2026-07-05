@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, current_app
 import requests.exceptions
-from utils.security import require_app_token
+from security import require_app_token
 from utils.utils import process_tmdb_result
 
 # define the blueprint
